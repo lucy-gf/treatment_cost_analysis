@@ -28,7 +28,7 @@ for(i in 1:nrow(costs_dt)){
 #   theme_bw() + scale_y_log10() + scale_x_log10()
 
 ## inflate to $2022
-if(!exists('deflate_rates')){deflate_rates <- data.table(WDI(indicator='NY.GDP.DEFL.ZS', start=min(costs$currency_year), end=2022))}
+if(!exists('deflate_rates')){deflate_rates <- data.table(WDI(indicator='NY.GDP.DEFL.ZS', start=min(costs_dt$currency_year), end=2022))}
 deflate_rates[, currency_year := year][, currency_iso3c := iso3c]
 costs_dt <- costs_dt[deflate_rates, on = c('currency_iso3c', 'currency_year'), curr_yr_defl_rate := i.NY.GDP.DEFL.ZS]
 costs_dt <- costs_dt[deflate_rates[year==2022,], on = c('currency_iso3c'), defl_rate_22 := i.NY.GDP.DEFL.ZS]
