@@ -12,13 +12,15 @@ Both using the `WDI` R package (World Development Indicators).
 
 ### Data in `/data/`
 
-- `123.csv` contains ...
-- `212.csv` contains ...
+- `OLD_DATA.csv` contains old data
 
 ### Scripts in `/scripts/`
 
 - `/setup/`:
   - `packages.R` for relevant package installs
   - `aesthetics.R` for ggplot etc. presets
-- `274.R`
+- `init.R` for running analysis
+- `data_cleaning.R` for adding WDI indicators to data etc.
+- `model_run.R` for running `brms` model
+- `plots.R` for creating and saving figures
 
