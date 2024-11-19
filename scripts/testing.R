@@ -19,48 +19,51 @@ ggplot(use) +
   theme_bw() + scale_x_log10() + scale_y_log10() +
   scale_color_manual(values = age_colors)
 
+## splitting into two
+
+use_hosp <- use[outcome=='hospital']
+use_outp <- use[outcome=='outpatient']
+
 ## brms
 
-lm <- brm(cost_usd_2022 ~ study_pop + outcome + gdpcap, 
-          data = use,
+# TODO - is lognormal correct?
+# TODO - is n_chain = 3 good?
+
+lm_hosp <- brms::brm(cost_usd_2022 ~ study_pop*gdpcap + (1|iso3c), 
+          data = use_hosp,
           family = lognormal('identity', link_sigma='log'),
-          chains = 3, cores = 3)
+          chains = 3, cores = 3, iter = 4000)
 
-# throws errors..:
+lm_outp <- brms::brm(cost_usd_2022 ~ study_pop*gdpcap + (1|iso3c), 
+                     data = use_outp,
+                     family = lognormal('identity', link_sigma='log'),
+                     chains = 3, cores = 3, iter = 4000)
 
-# Warning messages:
-#   1: There were 2860 transitions after warmup that exceeded the maximum treedepth. Increase max_treedepth above 10. See
-# https://mc-stan.org/misc/warnings.html#maximum-treedepth-exceeded 
-# 2: Examine the pairs() plot to diagnose sampling problems
-# 
-# 3: Bulk Effective Samples Size (ESS) is too low, indicating posterior means and medians may be unreliable.
-# Running the chains for more iterations may help. See
-# https://mc-stan.org/misc/warnings.html#bulk-ess 
+summary(lm_hosp)
+summary(lm_outp)
+brms::conditional_effects(lm_hosp) 
+brms::conditional_effects(lm_outp) 
+# pairs(lm)
 
-summary(lm)
-conditional_effects(lm) # looks about right
-pairs(lm)
-
-conditions <- unique(use[,c('study_pop','outcome')])
-facet_output <- conditional_effects(lm, conditions = conditions,
+conditions <- data.frame(study_pop = unique(use$study_pop))
+facet_output <- brms::conditional_effects(lm_outp, conditions = conditions,
                                     re_formula = NULL, method = "predict")
 plot(facet_output, points = TRUE)
 
-output <- facet_output[[3]]
+output <- data.table(facet_output[[3]])
 
 ggplot(output) + 
   geom_ribbon(aes(x=gdpcap, ymin=lower__, ymax=upper__), alpha=0.3) +
   geom_line(aes(gdpcap, estimate__), lwd=0.8, col='red') +
-  facet_grid(outcome~study_pop, scales='free') +
+  facet_grid(study_pop~., scales='free') +
   # scale_x_log10() + scale_y_log10() +
   theme_bw()
 
 ggplot(output) + 
   geom_ribbon(aes(x=gdpcap, ymin=lower__, ymax=upper__, group=study_pop), alpha=0.2) +
   geom_line(aes(gdpcap, estimate__, col=study_pop), lwd=1) +
-  facet_grid(outcome~., scales='free') +
   scale_x_log10() + scale_y_log10() +
+  facet_grid(cond__~.) + 
   theme_bw() + scale_color_manual(values = age_colors)
 
-# more similar than i was expecting across study_pops..?
 
