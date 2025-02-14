@@ -1,46 +1,89 @@
 ## CLEAN DATA ##
 
-costs_dt <- data[, c('country','iso3c','currency','currency_iso3c','study_year','currency_year','study_pop',
-                         'outcome','cost','study')][study_pop%in%c('adults','elderly','children'),]
+costs_dt <- data[, c('th','country','iso3c','currency','currency_iso3c','study_year','currency_year','study_pop',
+                         'outcome','cost')]
 
-## putting all costs into USD$2022
+costs_dt[is.na(study_year), study_year := currency_year]
+costs_dt[, study_year := as.numeric(study_year)]
+
+## putting all costs into USD$2023 (year can be changed but this is the last full WDI year)
 
 ## back into local currency
 # WDIsearch('exchange')
-if(!exists('lcu_rates')){lcu_rates <- data.table(WDI(indicator='PA.NUS.FCRF', start=min(costs_dt$currency_year), end=2022))}
-lcu_rates[, currency_year := year]
-costs_dt <- costs_dt[lcu_rates, on = c('iso3c', 'currency_year'), lcu_rate := i.PA.NUS.FCRF]
-costs_dt <- costs_dt[lcu_rates[currency_year==2022], on = c('iso3c'), lcu_rate_22 := i.PA.NUS.FCRF]
-for(i in 1:nrow(costs_dt)){
-  if(costs_dt$iso3c[i] %in% c('AUT','BEL','DEU','ESP','FIN','ITA','NLD')){
-    costs_dt$lcu_rate[i] <- lcu_rates[iso3c=='EMU' & currency_year == costs_dt$currency_year[i]]$PA.NUS.FCRF
-    costs_dt$lcu_rate_22[i] <- lcu_rates[iso3c=='EMU' & currency_year == 2022]$PA.NUS.FCRF
-  }
-  if(costs_dt$iso3c[i] %in% c('TWN') & costs_dt$currency_year[i] == 2010){
-    costs_dt$lcu_rate[i] <- 31.5
-    costs_dt$lcu_rate_22[i] <- 29.8
-  }
-}
+if(!exists('lcu_rates')){lcu_rates <- data.table(WDI(indicator='PA.NUS.FCRF', start=min(costs_dt$study_year), end=main_year))}
+lcu_rates[, study_year := year]
+costs_dt <- costs_dt[lcu_rates, on = c('iso3c', 'study_year'), lcu_rate_study_year := i.PA.NUS.FCRF]
+costs_dt <- costs_dt[lcu_rates[study_year==main_year], on = c('iso3c'), lcu_rate_main_yr := i.PA.NUS.FCRF]
 
-# ggplot(costs_dt) + 
-#   geom_point(aes(x=lcu_rate, y=lcu_rate_22, col=iso3c)) +
+costs_dt[iso3c == 'TWN' & study_year == 2010, lcu_rate_study_year := 31.5]
+costs_dt[iso3c == 'TWN' & study_year == 2010, lcu_rate_main_yr := 29.8]
+
+# ggplot(costs_dt) +
+#   geom_point(aes(x=lcu_rate, y=lcu_rate_22, col=iso3c, size=currency_year-1990), shape=4) +
 #   geom_line(aes(x=lcu_rate, y=lcu_rate), lty=2) +
 #   theme_bw() + scale_y_log10() + scale_x_log10()
 
-## inflate to $2022
-if(!exists('deflate_rates')){deflate_rates <- data.table(WDI(indicator='NY.GDP.DEFL.ZS', start=min(costs_dt$currency_year), end=2022))}
-deflate_rates[, currency_year := year][, currency_iso3c := iso3c]
-costs_dt <- costs_dt[deflate_rates, on = c('currency_iso3c', 'currency_year'), curr_yr_defl_rate := i.NY.GDP.DEFL.ZS]
-costs_dt <- costs_dt[deflate_rates[year==2022,], on = c('currency_iso3c'), defl_rate_22 := i.NY.GDP.DEFL.ZS]
-costs_dt[, inflator := defl_rate_22/curr_yr_defl_rate]
-costs_dt[currency_iso3c == 'USA', cost_lcu := cost*lcu_rate]
-costs_dt[currency_iso3c == iso3c, cost_lcu := cost]
-costs_dt[, cost_lcu_2022 := cost_lcu*inflator][, cost_usd_2022 := cost_lcu_2022/lcu_rate]
+## inflate to $ main year
+if(!exists('deflate_rates')){deflate_rates <- data.table(WDI(indicator='NY.GDP.DEFL.ZS', start=min(costs_dt$study_year), end=main_year))}
+deflate_rates[, currency_year := year][, study_year := year][, currency_iso3c := iso3c]
+costs_dt <- costs_dt[deflate_rates, on = c('currency_iso3c', 'study_year'), study_yr_defl_rate_c := i.NY.GDP.DEFL.ZS]
+costs_dt <- costs_dt[deflate_rates, on = c('currency_iso3c', 'currency_year'), curr_yr_defl_rate_c := i.NY.GDP.DEFL.ZS]
+costs_dt <- costs_dt[deflate_rates, on = c('iso3c', 'study_year'), study_yr_defl_rate_i := i.NY.GDP.DEFL.ZS]
+costs_dt <- costs_dt[deflate_rates[year==main_year,], on = c('iso3c'), defl_rate_main_yr_i := i.NY.GDP.DEFL.ZS]
+costs_dt[, inflator_curr_to_stud_c := curr_yr_defl_rate_c/study_yr_defl_rate_c]
+costs_dt[, inflator_stud_to_main_i := defl_rate_main_yr_i/study_yr_defl_rate_i]
+
+if(sum(costs_dt[currency_iso3c != iso3c]$currency_iso3c != 'USA') > 0){
+  print('Warning: some costs not in either local currency or USD')
+}
+
+# TURN COSTS IN CURRENCY (E.G. USD) INTO STUDY YEAR COSTS IN SAME CURRENCY
+costs_dt[, cost_stud_c := cost/inflator_curr_to_stud_c]
+
+# CONVERT TO LCU IN STUDY YEAR
+costs_dt[currency_iso3c == 'USA', cost_stud_i := cost_stud_c*lcu_rate_study_year]
+costs_dt[currency_iso3c == iso3c, cost_stud_i := cost_stud_c]
+
+# INFLATE TO MAIN YEAR IN LCU
+costs_dt[, cost_main_yr_i := cost_stud_i*inflator_stud_to_main_i]
+
+# CONVERT TO MAIN YEAR USD
+costs_dt[, cost_usd_main_yr := cost_main_yr_i/lcu_rate_main_yr]
 
 ## adding GDP per capita
-# using 2022 GDP per capita
-gdp_data <- WDI(indicator='NY.GDP.PCAP.KD', start=2022, end=2022)
-costs_gdp <- merge(costs_dt, gdp_data, by = c('iso3c'))
+if(!exists('gdp_data')){gdp_data <- WDI(indicator='NY.GDP.PCAP.KD', start=main_year, end=main_year)}
+costs_gdp <- data.table(merge(costs_dt, gdp_data, by = c('iso3c')))
 setnames(costs_gdp, 'NY.GDP.PCAP.KD', 'gdpcap')
-costs_gdp[,c('country.y','iso2c','year', 'curr_yr_defl_rate','defl_rate_22') := NULL]
+setnames(costs_gdp, 'country.x','country')
+costs_gdp <- costs_gdp[,c('th','country','iso3c','currency_iso3c','study_year','currency_year','study_pop','outcome','cost_usd_main_yr','gdpcap')]
+
+# ggplot(costs_gdp) +
+#   geom_point(aes(x=gdpcap, y=cost_usd_main_yr, col=iso3c)) +
+#   theme_bw() + #scale_y_log10() + scale_x_log10() +
+#   facet_grid(outcome ~ study_pop, scales = 'free_y')
+
+# healthcare expenditure per capita as a proportion of GDP per capita 
+# NOTE - using 2021 as is most recent data - need to find other source to update this
+if(!exists('hce_data')){hce_data <- data.table(WDI(indicator='SH.XPD.CHEX.PC.CD', start=2021, end=2021))}
+costs_gdp <- costs_gdp[hce_data[iso3c %in% costs_gdp$iso3c,][,c('iso3c','SH.XPD.CHEX.PC.CD')], on = c('iso3c')]
+setnames(costs_gdp, 'SH.XPD.CHEX.PC.CD', 'hce_cap')
+costs_gdp[, hce_prop_gdp := hce_cap/gdpcap]
+
+# ggplot(costs_gdp) +
+#     geom_point(aes(x=hce_prop_gdp, y=cost_usd_main_yr, col=iso3c)) +
+#     theme_bw() + facet_grid(outcome ~ study_pop, scales = 'free_y')
+
+ggplot(costs_gdp) +
+  geom_point(aes(x=hce_prop_gdp, y=gdpcap, col=iso3c)) +
+  theme_bw() + facet_grid(outcome ~ study_pop, scales = 'free_y')
+
+
+
+
+
+
+
+
+
+
 

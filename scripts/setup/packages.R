@@ -1,6 +1,7 @@
 ## INSTALLING RELEVANT LIBRARIES ##
 
 library(readr)
+library(readxl)
 library(data.table)
 library(dplyr)
 library(ggplot2)
