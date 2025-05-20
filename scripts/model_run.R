@@ -3,21 +3,21 @@
 ## splitting into two
 
 use_hosp <- costs_gdp[outcome=='hosp']
-use_outp <- costs_gdp[outcome=='outp' & study_pop != 'adult']
+use_outp <- costs_gdp[outcome=='outp']
 
 ## brms
 
 # TODO - is lognormal correct?
 # TODO - is n_chain = 3 good?
 
-lm_hosp <- brms::brm(cost_usd_main_yr ~ study_pop*(gdpcap + hce_prop_gdp) + (1|iso3c), 
+lm_hosp <- brms::brm(log(cost_usd_main_yr) ~ study_pop*(log(log(gdpcap)) + hce_prop_gdp) + (1|iso3c), 
                      data = use_hosp,
-                     family = lognormal('identity', link_sigma='log'),
+                     family = gaussian(),
                      chains = 3, cores = 3, iter = 4000)
 
-lm_outp <- brms::brm(cost_usd_main_yr ~ study_pop*(gdpcap + hce_prop_gdp) + (1|iso3c), 
+lm_outp <- brms::brm(log(cost_usd_main_yr) ~ study_pop*(log(log(gdpcap)) + hce_prop_gdp) + (1|iso3c), 
                      data = use_outp,
-                     family = lognormal('identity', link_sigma='log'),
+                     family = gaussian(),
                      chains = 3, cores = 3, iter = 4000)
 
 summary(lm_hosp)
@@ -26,8 +26,8 @@ brms::conditional_effects(lm_hosp)
 brms::conditional_effects(lm_outp) 
 # pairs(lm)
 
-conditions <- data.frame(study_pop = unique(use_outp$study_pop))
-facet_output <- brms::conditional_effects(lm_outp, conditions = conditions,
+conditions <- data.frame(study_pop = unique(use_hosp$study_pop))
+facet_output <- brms::conditional_effects(lm_hosp, conditions = conditions,
                                           re_formula = NULL, method = "predict")
 plot(facet_output, points = TRUE)
 

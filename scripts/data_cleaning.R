@@ -1,3 +1,4 @@
+
 ## CLEAN DATA ##
 
 costs_dt <- data[, c('th','country','iso3c','currency','currency_iso3c','study_year','currency_year','study_pop',
@@ -57,28 +58,34 @@ setnames(costs_gdp, 'NY.GDP.PCAP.KD', 'gdpcap')
 setnames(costs_gdp, 'country.x','country')
 costs_gdp <- costs_gdp[,c('th','country','iso3c','currency_iso3c','study_year','currency_year','study_pop','outcome','cost_usd_main_yr','gdpcap')]
 
-# ggplot(costs_gdp) +
-#   geom_point(aes(x=gdpcap, y=cost_usd_main_yr, col=iso3c)) +
-#   theme_bw() + #scale_y_log10() + scale_x_log10() +
-#   facet_grid(outcome ~ study_pop, scales = 'free_y')
+ggplot(costs_gdp) +
+  geom_point(aes(x=gdpcap, y=cost_usd_main_yr, col=iso3c)) +
+  theme_bw() + scale_y_log10() + scale_x_log10() +
+  facet_grid(outcome ~ study_pop, scales = 'free_y')
+
+ggplot(costs_gdp) +
+  geom_point(aes(x=hce_prop_gdp, y=cost_usd_main_yr, col=iso3c)) +
+  theme_bw() + scale_y_log10() +
+  facet_grid(outcome ~ study_pop, scales = 'free_y')
 
 # healthcare expenditure per capita as a proportion of GDP per capita 
-# NOTE - using 2021 as is most recent data - need to find other source to update this
-if(!exists('hce_data')){hce_data <- data.table(WDI(indicator='SH.XPD.CHEX.PC.CD', start=2021, end=2021))}
+# using 2022 as is most recent data
+if(!exists('hce_data')){hce_data <- data.table(WDI(indicator='SH.XPD.CHEX.PC.CD', start=2022, end=2022))}
 costs_gdp <- costs_gdp[hce_data[iso3c %in% costs_gdp$iso3c,][,c('iso3c','SH.XPD.CHEX.PC.CD')], on = c('iso3c')]
 setnames(costs_gdp, 'SH.XPD.CHEX.PC.CD', 'hce_cap')
 costs_gdp[, hce_prop_gdp := hce_cap/gdpcap]
 
-# ggplot(costs_gdp) +
-#     geom_point(aes(x=hce_prop_gdp, y=cost_usd_main_yr, col=iso3c)) +
-#     theme_bw() + facet_grid(outcome ~ study_pop, scales = 'free_y')
+ggplot(costs_gdp) +
+    geom_point(aes(x=hce_prop_gdp, y=cost_usd_main_yr, col=gdpcap)) +
+    theme_bw() + facet_grid(outcome ~ study_pop, scales = 'free_y')
+
+ggplot(costs_gdp) +
+  geom_point(aes(x=gdpcap, y=cost_usd_main_yr, col=iso3c)) +
+  theme_bw() + facet_grid(outcome ~ study_pop, scales = 'free_y')
 
 ggplot(costs_gdp) +
   geom_point(aes(x=hce_prop_gdp, y=gdpcap, col=iso3c)) +
   theme_bw() + facet_grid(outcome ~ study_pop, scales = 'free_y')
-
-
-
 
 
 
