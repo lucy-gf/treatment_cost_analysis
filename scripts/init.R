@@ -12,7 +12,6 @@ data <- data.table(read_xlsx(here::here('data','Merged Flu Cost Data.xlsx')))[!i
 
 # cleaning data
 source(here::here('scripts','data_cleaning.R'))
-## add a file to merge with extra adult outpatient data
 
 # producing model
 source(here::here('scripts','model_run.R'))
