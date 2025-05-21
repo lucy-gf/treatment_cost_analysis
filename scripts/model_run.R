@@ -7,8 +7,8 @@ use_outp <- costs_gdp[outcome=='outp']
 
 ## brms
 
-lm_hosp <- brms::brm(#log(cost_usd_main_yr) ~ study_pop*(log(log(gdpcap)) + hce_prop_gdp) + (1|iso3c), 
-                     log(cost_usd_main_yr) ~ study_pop*(log(log(gdpcap)) + hce_prop_gdp), 
+lm_hosp <- brms::brm(log(cost_usd_main_yr) ~ study_pop*(log(log(gdpcap)) + hce_prop_gdp), 
+                     # log(cost_usd_main_yr) ~ study_pop*(log(log(gdpcap))) + (1|iso3c), 
                      data = use_hosp,
                      family = gaussian(),
                      chains = 3, cores = 3, 
@@ -64,7 +64,8 @@ exp_out_hosp_l %>%
   geom_point(aes(x = gdpcap, y = med, group = id, col = iso3c), size = 2) +
   geom_errorbar(aes(x = gdpcap, ymin = lower, ymax = upper, group = id, col = iso3c), alpha = 0.4) +
   facet_grid(study_pop~., scales = 'free') + 
-  theme_bw() + scale_x_log10()
+  theme_bw() + scale_x_log10() + 
+  ggtitle('Hospitalisation costs')
 
 exp_out_outp <- data.table(exp(posterior_epred(lm_outp,
                                                ndraws = 3000)))
@@ -94,7 +95,8 @@ exp_out_outp_l %>%
   geom_point(aes(x = gdpcap, y = med, group = id, col = iso3c), size = 2) +
   geom_errorbar(aes(x = gdpcap, ymin = lower, ymax = upper, group = id, col = iso3c), alpha = 0.4) +
   facet_grid(study_pop~., scales = 'free') + 
-  theme_bw() + scale_x_log10()
+  theme_bw() + scale_x_log10() + 
+  ggtitle('Outpatient costs')
 
 
 
