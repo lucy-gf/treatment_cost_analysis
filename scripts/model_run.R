@@ -1,102 +1,151 @@
+
 ## RUNNING MODEL ##
 
-## splitting into two
+interval_width <- 0.5
+
+interval_probs <- c((1 - interval_width)/2, 1 - (1 - interval_width)/2)
+
+cat('\nConf. interval width = ', 100*interval_width, '%\n', sep = '')
+
+## splitting into two models/datasets for hospitalisation vs outpatient
 
 use_hosp <- costs_gdp[outcome=='hosp']
 use_outp <- costs_gdp[outcome=='outp']
 
-## brms
+formula <- bf(cost_usd_main_yr ~ 0 + log(gdpcap):study_pop + hce_prop_gdp:study_pop + (1 | iso3c))
 
-lm_hosp <- brms::brm(log(cost_usd_main_yr) ~ study_pop*(log(log(gdpcap)) + hce_prop_gdp), 
-                     # log(cost_usd_main_yr) ~ study_pop*(log(log(gdpcap))) + (1|iso3c), 
-                     data = use_hosp,
-                     family = gaussian(),
-                     chains = 3, cores = 3, 
-                     iter = 4000,
-                     control = list(max_treedepth = 20))
+## run both brms
+# using Gamma(link = "log") to ensure cost >= 0
 
-lm_outp <- brms::brm(#log(cost_usd_main_yr) ~ study_pop*(log(log(gdpcap)) + hce_prop_gdp) + (1|iso3c), 
-                     log(cost_usd_main_yr) ~ study_pop*(log(log(gdpcap)) + hce_prop_gdp), 
-                     data = use_outp,
-                     family = gaussian(),
-                     chains = 3, cores = 3, 
-                     iter = 4000,
-                     control = list(max_treedepth = 20))
+lm_hosp <- brms::brm(
+  formula = formula,
+  data = use_hosp,
+  family = Gamma(link = "log"),
+  chains = 3, cores = 3, 
+  iter = 4000,
+  control = list(max_treedepth = 20)
+  )
 
-summary(lm_hosp)
-summary(lm_outp)
-pairs(lm_hosp)
-pairs(lm_outp)
-brms::conditional_effects(lm_hosp) 
-brms::conditional_effects(lm_outp) 
-# pairs(lm)
+lm_outp <- brms::brm(
+  formula = formula,
+  data = use_outp,
+  family = Gamma(link = "log"),
+  chains = 3, cores = 3, 
+  iter = 4000,
+  control = list(max_treedepth = 20)
+)
 
-conditions <- data.frame(study_pop = unique(use_hosp$study_pop))
-facet_output <- brms::conditional_effects(lm_hosp, conditions = conditions,
-                                          method = "posterior_epred")
-plot(facet_output, points = F)
+# plot predictions against observed data
+fitted(lm_hosp, newdata = use_hosp, re_formula = NA, probs = interval_probs) %>%
+  as_tibble() %>%
+  bind_cols(use_hosp) %>% 
+  mutate(outcome = 'hosp') %>% 
+  rbind(fitted(lm_outp, newdata = use_outp, re_formula = NA, probs = interval_probs) %>%
+          as_tibble() %>%
+          bind_cols(use_outp) %>% 
+          mutate(outcome = 'outp')) %>% 
+  ggplot(aes(x = gdpcap, col = iso3c)) +
+  geom_point(aes(y = cost_usd_main_yr), 
+             shape = 4) +
+  geom_point(aes(y = Estimate)) +
+  geom_errorbar(aes(ymin = get(paste0('Q', 100*interval_probs[1])), ymax = get(paste0('Q', 100*interval_probs[2])))) + 
+  labs(x = "GDP per capita", y = "Treatment cost") +
+  scale_x_log10() + 
+  theme_bw() + 
+  facet_grid(outcome ~ study_pop, scales = 'free')
 
 
-exp_out_hosp <- data.table(exp(posterior_epred(lm_hosp,
-                                               ndraws = 3000)))
+## prediction plots - TODO move these into plots.R
 
-exp_out_hosp_l <- suppressWarnings(melt.data.table(exp_out_hosp))
-exp_out_hosp_l[, id := as.numeric(gsub('V','',variable))]
-exp_out_hosp_l[, variable := NULL]
-exp_out_hosp_l[, sample_id := rep(1:(nrow(exp_out_hosp_l)/n_distinct(exp_out_hosp_l$id)), n_distinct(exp_out_hosp_l$id))]
+# fix hce_prop_gdp at median (or some value)
+fixed_HCE <- median(use_hosp$hce_prop_gdp, na.rm = TRUE)
 
-use_hosp_no_na <- if(grepl('hce_prop_gdp', lm_hosp$formula$formula[3])){
-    use_hosp[!is.na(hce_prop_gdp)]
-  }else{
-    use_hosp
-  }
-use_hosp_no_na[, id := 1:nrow(use_hosp_no_na)]
+# fix gdpcap at median (or some value)
+fixed_gdpcap <- median(use_hosp$gdpcap, na.rm = TRUE)
 
-exp_out_hosp_l <- exp_out_hosp_l[use_hosp_no_na[, c('id','iso3c','study_year','study_pop','outcome','cost_usd_main_yr','gdpcap','hce_prop_gdp')], on = 'id']
+# Create grid for GDPpc varying, HCE fixed
+newdata_gdp <- expand.grid(
+  gdpcap = seq(min(use_hosp$gdpcap, na.rm = TRUE), 
+               max(use_hosp$gdpcap, na.rm = TRUE), 
+               length.out = 100),
+  hce_prop_gdp = fixed_HCE,
+  study_pop = unique(use_hosp$study_pop)
+)
 
-exp_out_hosp_l %>% 
-  group_by(id, iso3c, study_year, study_pop, cost_usd_main_yr, gdpcap, hce_prop_gdp) %>% 
-  summarise(med = median(value),
-            lower = quantile(value, 0.025),
-            upper = quantile(value, 0.975)) %>% 
-  ggplot() + 
-  geom_point(aes(x = gdpcap, y = cost_usd_main_yr, col = iso3c), shape = 4, size = 2) + 
-  geom_point(aes(x = gdpcap, y = med, group = id, col = iso3c), size = 2) +
-  geom_errorbar(aes(x = gdpcap, ymin = lower, ymax = upper, group = id, col = iso3c), alpha = 0.4) +
-  facet_grid(study_pop~., scales = 'free') + 
-  theme_bw() + scale_x_log10() + 
-  ggtitle('Hospitalisation costs')
+# Create grid for HCE varying, GDPpc fixed
+newdata_hce <- expand.grid(
+  gdpcap = fixed_gdpcap,
+  hce_prop_gdp = seq(min(use_hosp$hce_prop_gdp, na.rm = TRUE), 
+            max(use_hosp$hce_prop_gdp, na.rm = TRUE), 
+            length.out = 100),
+  study_pop = unique(use_hosp$study_pop)
+)
 
-exp_out_outp <- data.table(exp(posterior_epred(lm_outp,
-                                               ndraws = 3000)))
+pred_gdp <- predict(lm_hosp, newdata = newdata_gdp, re_formula = NA, probs = interval_probs) %>%
+  as_tibble() %>%
+  bind_cols(newdata_gdp)
 
-exp_out_outp_l <- suppressWarnings(melt.data.table(exp_out_outp))
-exp_out_outp_l[, id := as.numeric(gsub('V','',variable))]
-exp_out_outp_l[, variable := NULL]
-exp_out_outp_l[, sample_id := rep(1:(nrow(exp_out_outp_l)/n_distinct(exp_out_outp_l$id)), n_distinct(exp_out_outp_l$id))]
+pred_hce <- predict(lm_hosp, newdata = newdata_hce, re_formula = NA, probs = interval_probs) %>%
+  as_tibble() %>%
+  bind_cols(newdata_hce)
 
-use_outp_no_na <- if(grepl('hce_prop_gdp', lm_outp$formula$formula[3])){
-  use_outp[!is.na(hce_prop_gdp)]
-}else{
-  use_outp
-}
-use_outp_no_na[, id := 1:nrow(use_outp_no_na)]
 
-exp_out_outp_l <- exp_out_outp_l[use_outp_no_na[, c('id','iso3c','study_year','study_pop','outcome','cost_usd_main_yr','gdpcap','hce_prop_gdp')], on = 'id']
+# plot hosp_cost ~ GDPpc for each study_pop
+p1 <- ggplot(pred_gdp, aes(x = gdpcap, y = Estimate, color = study_pop, fill = study_pop)) +
+  geom_line(size = 1) +
+  geom_ribbon(aes(ymin = get(paste0('Q', 100*interval_probs[1])), ymax = get(paste0('Q', 100*interval_probs[2]))), alpha = 0.2, color = NA) +
+  labs(
+    title = "Predicted cost by log GDPpc (HCE fixed)",
+    x = "GDP per capita",
+    y = "Predicted cost"
+  ) + scale_x_log10() + 
+  theme_minimal() + 
+  scale_fill_manual(values = age_colors) + 
+  scale_color_manual(values = age_colors)
 
-exp_out_outp_l %>% 
-  filter(!is.na(value)) %>% # unsure why some are NA
-  group_by(id, iso3c, study_year, study_pop, cost_usd_main_yr, gdpcap, hce_prop_gdp) %>% 
-  summarise(med = median(value),
-            lower = quantile(value, 0.025),
-            upper = quantile(value, 0.975)) %>% 
-  ggplot() + 
-  geom_point(aes(x = gdpcap, y = cost_usd_main_yr, col = iso3c), shape = 4, size = 2) + 
-  geom_point(aes(x = gdpcap, y = med, group = id, col = iso3c), size = 2) +
-  geom_errorbar(aes(x = gdpcap, ymin = lower, ymax = upper, group = id, col = iso3c), alpha = 0.4) +
-  facet_grid(study_pop~., scales = 'free') + 
-  theme_bw() + scale_x_log10() + 
-  ggtitle('Outpatient costs')
+# plot hosp_cost ~ HCE for each study_pop
+p2 <- ggplot(pred_hce, aes(x = hce_prop_gdp, y = Estimate, color = study_pop, fill = study_pop)) +
+  geom_line(size = 1) +
+  geom_ribbon(aes(ymin = get(paste0('Q', 100*interval_probs[1])), ymax = get(paste0('Q', 100*interval_probs[2]))), alpha = 0.2, color = NA) +
+  labs(
+    title = "Predicted cost by HCE (GDPpc fixed)",
+    x = "Healthcare expenditure as a proportion of GDP per capita",
+    y = "Predicted cost"
+  ) +
+  theme_minimal() + 
+  scale_fill_manual(values = age_colors) + 
+  scale_color_manual(values = age_colors)
+
+# print plots
+p1 + p2 + plot_layout(nrow = 2, guides = 'collect')
+
+# TODO how is the estimate for low adult cost outside of the CI for low HCE?
+
+####################################
+
+# correlation between GDP per capita and hce_prop_gdp
+
+unique(costs_gdp %>% 
+         select(iso3c, study_year, gdpcap, hce_prop_gdp)) %>% 
+  ggplot() +
+  geom_point(aes(gdpcap, hce_prop_gdp, col = study_year)) + 
+  theme_bw() + 
+  labs(x = 'GDP per capita', 
+       y = 'Healthcare expenditure as a proportion of GDP per capita') + 
+  scale_color_viridis()
+
+
+loo_with_hce <- loo(lm_hosp)
+# TODO then do again without hce
+# then compare using loo_compare(loo_with_hce, loo_without_hce)
+# loo_compare() reports the difference in expected log predictive density (elpd) between models.
+# A positive difference favors the first model (fit_with_HCE).
+# Differences larger than about 4–5 are considered meaningful.
+# Also check standard errors reported by loo_compare().
+
+
+
+
 
 
 

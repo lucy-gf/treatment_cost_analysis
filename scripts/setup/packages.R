@@ -7,7 +7,8 @@ library(dplyr)
 library(ggplot2)
 library(brms)
 library(WDI)
-
+library(patchwork)
+library(viridis)
 
 
 
