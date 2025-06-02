@@ -92,12 +92,14 @@ pred_hce <- predict(lm_hosp, newdata = newdata_hce, re_formula = NA, probs = int
 
 # plot hosp_cost ~ GDPpc for each study_pop
 p1 <- ggplot(pred_gdp, aes(x = gdpcap, y = Estimate, color = study_pop, fill = study_pop)) +
-  geom_line(size = 1) +
+  geom_line(lwd = 1) +
   geom_ribbon(aes(ymin = get(paste0('Q', 100*interval_probs[1])), ymax = get(paste0('Q', 100*interval_probs[2]))), alpha = 0.2, color = NA) +
   labs(
     title = "Predicted cost by log GDPpc (HCE fixed)",
     x = "GDP per capita",
-    y = "Predicted cost"
+    y = "Predicted cost",
+    fill = 'Age group',
+    color = 'Age group'
   ) + scale_x_log10() + 
   theme_minimal() + 
   scale_fill_manual(values = age_colors) + 
@@ -105,12 +107,14 @@ p1 <- ggplot(pred_gdp, aes(x = gdpcap, y = Estimate, color = study_pop, fill = s
 
 # plot hosp_cost ~ HCE for each study_pop
 p2 <- ggplot(pred_hce, aes(x = hce_prop_gdp, y = Estimate, color = study_pop, fill = study_pop)) +
-  geom_line(size = 1) +
+  geom_line(lwd = 1) +
   geom_ribbon(aes(ymin = get(paste0('Q', 100*interval_probs[1])), ymax = get(paste0('Q', 100*interval_probs[2]))), alpha = 0.2, color = NA) +
   labs(
     title = "Predicted cost by HCE (GDPpc fixed)",
     x = "Healthcare expenditure as a proportion of GDP per capita",
-    y = "Predicted cost"
+    y = "Predicted cost",
+    fill = 'Age group',
+    color = 'Age group'
   ) +
   theme_minimal() + 
   scale_fill_manual(values = age_colors) + 
@@ -120,6 +124,39 @@ p2 <- ggplot(pred_hce, aes(x = hce_prop_gdp, y = Estimate, color = study_pop, fi
 p1 + p2 + plot_layout(nrow = 2, guides = 'collect')
 
 # TODO how is the estimate for low adult cost outside of the CI for low HCE?
+
+tile_data <- expand.grid(
+  gdpcap = seq(min(use_hosp$gdpcap, na.rm = TRUE), 
+               max(use_hosp$gdpcap, na.rm = TRUE), 
+               length.out = 100),
+  hce_prop_gdp = seq(min(use_hosp$hce_prop_gdp, na.rm = TRUE), 
+                     max(use_hosp$hce_prop_gdp, na.rm = TRUE), 
+                     length.out = 100),
+  study_pop = unique(use_hosp$study_pop)
+)
+
+pred_tile <- predict(lm_hosp, newdata = tile_data, re_formula = NA, probs = interval_probs) %>%
+  as_tibble() %>%
+  bind_cols(tile_data)
+
+ggplot() +
+  geom_tile(data = pred_tile, aes(x = gdpcap, y = hce_prop_gdp, fill = Estimate)) +
+  labs(
+    title = "Predicted cost by GDPpc and HCE as a proportion of GDPpc",
+    y = "Healthcare expenditure as a proportion of GDP per capita",
+    x = "GDP per capita",
+    fill = "Predicted cost"
+  ) +
+  geom_point(data = unique(use_hosp %>% select(gdpcap,hce_prop_gdp) %>% 
+                             filter(gdpcap > 55000 & hce_prop_gdp > 0.15)),
+             aes(x = gdpcap, y = hce_prop_gdp), shape = 4, col = 'white') +
+  geom_point(data = unique(use_hosp %>% select(gdpcap,hce_prop_gdp) %>% 
+                             filter(gdpcap <= 55000 | hce_prop_gdp <= 0.15)),
+             aes(x = gdpcap, y = hce_prop_gdp), shape = 4, col = 'black') +
+  facet_grid(study_pop~.) + 
+  theme_minimal() + 
+  scale_fill_viridis(option = 'A', direction = -1) 
+
 
 ####################################
 
