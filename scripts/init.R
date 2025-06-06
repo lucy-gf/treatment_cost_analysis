@@ -9,7 +9,7 @@ source(here::here('scripts','setup','aesthetics.R'))
 main_year <- 2023
 
 # loading data
-data <- data.table(read_xlsx(here::here('data','Merged Flu Cost Data.xlsx')))[!is.na(th),] # remove empty rows
+data <- data.table(read_xlsx(here::here('data','FINAL Merged Flu Cost Data.xlsx')))[!is.na(th),] # remove empty rows
 
 # cleaning data
 source(here::here('scripts','data_cleaning.R'))

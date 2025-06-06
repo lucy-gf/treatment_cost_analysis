@@ -74,7 +74,7 @@ h1 <- ggplot() +
   labs(
     y = "Healthcare expenditure as a proportion of GDP per capita",
     x = "GDP per capita",
-    fill = "Predicted\nhospitalisation cost"
+    fill = "Predicted\nhospitalisation\ncost (USD XXXX)"
   ) +
   geom_point(data = unique(use_hosp %>% select(gdpcap,hce_prop_gdp,study_pop)),
              aes(x = gdpcap, y = hce_prop_gdp), shape = 4, col = 'white') +
@@ -88,7 +88,7 @@ h2 <- ggplot() +
   labs(
     y = "Healthcare expenditure as a proportion of GDP per capita",
     x = "GDP per capita",
-    fill = "Predicted\noutpatient cost"
+    fill = "Predicted\noutpatient\ncost (USD XXXX)"
   ) +
   geom_point(data = unique(use_outp %>% select(gdpcap,hce_prop_gdp,study_pop)),
              aes(x = gdpcap, y = hce_prop_gdp), shape = 4, col = 'white') +
@@ -98,7 +98,7 @@ h2 <- ggplot() +
                      breaks = c(3,10,30,100,300), limits = c(10, NA)) 
 
 # print plots
-h1 + h2 + plot_layout(nrow = 1, axes = 'collect')
+h1 + h2 + plot_layout(nrow = 1)
 
 ggsave(here::here('plots','predicted_costs_heatmap_grid.png'),
        width = 12, height = 10)
