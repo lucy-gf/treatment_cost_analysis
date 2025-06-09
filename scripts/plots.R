@@ -2,11 +2,11 @@
 #### PRODUCING AND SAVING PLOTS AND TABLES ####
 
 # plot predictions against observed data
-pred_obs <- fitted(lm_hosp, newdata = use_hosp, re_formula = NA, probs = interval_probs) %>%
+pred_obs <- fitted(hosp_model, newdata = use_hosp, re_formula = NA, probs = interval_probs) %>%
   as_tibble() %>%
   bind_cols(use_hosp) %>% 
   mutate(outcome = 'hosp') %>% 
-  rbind(fitted(lm_outp, newdata = use_outp, re_formula = NA, probs = interval_probs) %>%
+  rbind(fitted(outp_model, newdata = use_outp, re_formula = NA, probs = interval_probs) %>%
           as_tibble() %>%
           bind_cols(use_outp) %>% 
           mutate(outcome = 'outp')) %>% 
@@ -16,8 +16,24 @@ pred_obs <- fitted(lm_hosp, newdata = use_hosp, re_formula = NA, probs = interva
 colorscale <- rev(c('#a50f15','#fb6a4a','#fdae6b','#9ecae1','#6baed6','#08519c'))
 breaks <- seq(min(pred_obs$hce_prop_gdp), max(pred_obs$hce_prop_gdp), length.out = length(colorscale))
 
+# pred_obs %>% 
+#   ggplot(aes(x = gdpcap, col = hce_prop_gdp)) +
+#   geom_point(aes(y = cost_usd_main_yr), 
+#              shape = 4, size = 3) +
+#   geom_point(aes(y = Estimate), shape = 1, size = 3) +
+#   geom_errorbar(aes(ymin = get(paste0('Q', 100*interval_probs[1])), ymax = get(paste0('Q', 100*interval_probs[2])))) + 
+#   labs(x = "GDP per capita ($XXXX)", y = "Treatment cost ($XXXX)", 
+#        col = 'Healthcare expenditure\nper capita as a proportion\nof GDP per capita') +
+#   scale_color_gradientn(colors = colorscale, values = scales::rescale(breaks)) +
+#   scale_x_log10(breaks = c(1000,3000,10000,30000,100000), limits = c(1000,100000)) + scale_y_log10() + 
+#   # scale_colour_continuous() + 
+#   theme_bw() + theme(text = element_text(size = 12)) + 
+#   facet_grid(outcome ~ study_pop, scales = 'free', 
+#              labeller = labeller(outcome = outcome_labels,
+#                                  study_pop = pop_labels))
+
 pred_obs %>% 
-  ggplot(aes(x = gdpcap, col = hce_prop_gdp)) +
+  ggplot(aes(x = hce_cap, col = gdpcap)) +
   geom_point(aes(y = cost_usd_main_yr), 
              shape = 4, size = 3) +
   geom_point(aes(y = Estimate), shape = 1, size = 3) +
@@ -25,8 +41,9 @@ pred_obs %>%
   labs(x = "GDP per capita ($XXXX)", y = "Treatment cost ($XXXX)", 
        col = 'Healthcare expenditure\nper capita as a proportion\nof GDP per capita') +
   scale_color_gradientn(colors = colorscale, values = scales::rescale(breaks)) +
-  scale_x_log10(breaks = c(1000,3000,10000,30000,100000), limits = c(1000,100000)) + scale_y_log10() + 
-  # scale_colour_continuous() + 
+  scale_x_log10(breaks = c(100,300,1000,3000,10000,30000), limits = c(300,30000)) +
+  scale_y_log10() +
+  # scale_colour_continuous() +
   theme_bw() + theme(text = element_text(size = 12)) + 
   facet_grid(outcome ~ study_pop, scales = 'free', 
              labeller = labeller(outcome = outcome_labels,

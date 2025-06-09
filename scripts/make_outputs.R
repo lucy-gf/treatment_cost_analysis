@@ -32,7 +32,7 @@ data_wdi <- rbind(data_wdi %>% mutate(study_pop = 'adult'),
 
 ## hospitalisation
 
-hospitalisation_table <- predict(lm_hosp, newdata = data_wdi, re_formula = NA, probs = interval_probs) %>%
+hospitalisation_table <- predict(hosp_model, newdata = data_wdi, re_formula = NA, probs = interval_probs) %>%
   as_tibble() %>%
   bind_cols(data_wdi) %>% 
   mutate(outcome = 'hospitalisation') %>% 
@@ -43,7 +43,7 @@ write_csv(hospitalisation_table,
 
 ## outpatient
 
-outpatient_table <- predict(lm_outp, newdata = data_wdi, re_formula = NA, probs = interval_probs) %>%
+outpatient_table <- predict(outp_model, newdata = data_wdi, re_formula = NA, probs = interval_probs) %>%
   as_tibble() %>%
   bind_cols(data_wdi) %>% 
   mutate(outcome = 'outpatient') %>% 
