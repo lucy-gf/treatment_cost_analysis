@@ -20,5 +20,7 @@ source(here::here('scripts','model_run.R'))
 # plots
 source(here::here('scripts','plots.R')) 
 
+# make outputs table
+source(here::here('scripts','make_outputs.R')) 
 
 
