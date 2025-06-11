@@ -10,6 +10,37 @@ cat('\nConf. interval width = ', 100*interval_width, '%\n', sep = '')
 use_hosp <- costs_gdp[outcome=='hosp']
 use_outp <- costs_gdp[outcome=='outp']
 
+
+## example formula
+
+# 1. no interaction, random intercepts
+bf(cost_usd_main_yr ~ 0 + log(gdpcap) + treatment_type + study_pop + (1 | iso3c))
+
+# 2. no interaction, random slopes
+bf(cost_usd_main_yr ~ 0 + log(gdpcap) + (1 + treatment_type + study_pop | iso3c))
+# OR
+bf(cost_usd_main_yr ~ 0 + log(gdpcap) + (1 + treatment_type | iso3c) + (1 + study_pop | iso3c))
+
+# 3. interaction, no random slopes
+bf(cost_usd_main_yr ~ 0 + log(gdpcap):treatment_type + log(gdpcap):study_pop + (1 | iso3c))
+
+# 4. interaction, random slopes
+bf(cost_usd_main_yr ~ 0 + log(gdpcap):treatment_type + log(gdpcap):study_pop + 
+     (1 + treatment_type + study_pop | iso3c))
+#OR
+bf(cost_usd_main_yr ~ 0 + log(gdpcap):treatment_type + log(gdpcap):study_pop + 
+     (1 + treatment_type | iso3c) + (1 + study_pop | iso3c))
+
+## THEN DO AGAIN WITH HCEPC INSTEAD OF GDPPC
+
+## PLOT THE OUTCOMES AGAINST LOG GDPPC, WHAT DO THE DIFFERENT FORMULAE DO
+
+# set of plots for each model
+
+########
+
+
+
 formula_gdppc <- 
   bf(cost_usd_main_yr ~ 0 + log(gdpcap):study_pop + (1 | iso3c))
 formula_gdppc_hceprop <- 

@@ -33,6 +33,22 @@ breaks <- seq(min(pred_obs$hce_prop_gdp), max(pred_obs$hce_prop_gdp), length.out
 #                                  study_pop = pop_labels))
 
 pred_obs %>% 
+  ggplot(aes(x = gdpcap, col = study_pop)) +
+  geom_point(aes(y = cost_usd_main_yr), 
+             size = 3) +
+  # geom_point(aes(y = Estimate), shape = 1, size = 3) +
+  # geom_errorbar(aes(ymin = get(paste0('Q', 100*interval_probs[1])), ymax = get(paste0('Q', 100*interval_probs[2])))) + 
+  # labs(x = "GDP per capita ($XXXX)", y = "Treatment cost ($XXXX)") +
+  # scale_color_gradientn(colors = colorscale, values = scales::rescale(breaks)) +
+  scale_x_log10(breaks = c(100,300,1000,3000,10000,30000)) +
+  # scale_y_log10() +
+  # scale_colour_continuous() +
+  theme_bw() + theme(text = element_text(size = 12)) + 
+  facet_grid(outcome ~ ., scales = 'free_y', 
+             labeller = labeller(outcome = outcome_labels,
+                                 study_pop = pop_labels))
+
+pred_obs %>% 
   ggplot(aes(x = hce_cap, col = gdpcap)) +
   geom_point(aes(y = cost_usd_main_yr), 
              shape = 4, size = 3) +
