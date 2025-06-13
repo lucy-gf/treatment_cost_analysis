@@ -8,7 +8,7 @@ source(here::here('scripts','setup','aesthetics.R'))
 
 main_year <- 2023
 
-interval_width <- 0.5 # confidence interval width
+interval_width <- 0.95 # confidence interval width
 
 # loading data
 data <- data.table(read_xlsx(here::here('data','FINAL Merged Flu Cost Data.xlsx')))[!is.na(th),] # remove empty rows

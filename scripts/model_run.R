@@ -7,31 +7,42 @@ cat('\nConf. interval width = ', 100*interval_width, '%\n', sep = '')
 
 ## splitting into two models/datasets for hospitalisation vs outpatient
 
-use_hosp <- costs_gdp[outcome=='hosp']
-use_outp <- costs_gdp[outcome=='outp']
+costs_gdp <- costs_gdp %>% 
+  mutate(treatment_type = outcome)
 
-
-## example formula
-
+## formulae to run
+ 
 # 1. no interaction, random intercepts
-bf(cost_usd_main_yr ~ 0 + log(gdpcap) + treatment_type + study_pop + (1 | iso3c))
-
+gdp_f1 <- bf(cost_usd_main_yr ~ 0 + log(gdpcap) + treatment_type + study_pop + (1 | iso3c))
 # 2. no interaction, random slopes
-bf(cost_usd_main_yr ~ 0 + log(gdpcap) + (1 + treatment_type + study_pop | iso3c))
+gdp_f2a <- bf(cost_usd_main_yr ~ 0 + log(gdpcap) + (1 + treatment_type + study_pop | iso3c))
 # OR
-bf(cost_usd_main_yr ~ 0 + log(gdpcap) + (1 + treatment_type | iso3c) + (1 + study_pop | iso3c))
-
+gdp_f2b <- bf(cost_usd_main_yr ~ 0 + log(gdpcap) + (1 | iso3c) + (treatment_type | iso3c) + (study_pop | iso3c))
 # 3. interaction, no random slopes
-bf(cost_usd_main_yr ~ 0 + log(gdpcap):treatment_type + log(gdpcap):study_pop + (1 | iso3c))
-
+gdp_f3 <- bf(cost_usd_main_yr ~ 0 + log(gdpcap):treatment_type + log(gdpcap):study_pop + (1 | iso3c))
 # 4. interaction, random slopes
-bf(cost_usd_main_yr ~ 0 + log(gdpcap):treatment_type + log(gdpcap):study_pop + 
+gdp_f4a <- bf(cost_usd_main_yr ~ 0 + log(gdpcap):treatment_type + log(gdpcap):study_pop + 
      (1 + treatment_type + study_pop | iso3c))
 #OR
-bf(cost_usd_main_yr ~ 0 + log(gdpcap):treatment_type + log(gdpcap):study_pop + 
-     (1 + treatment_type | iso3c) + (1 + study_pop | iso3c))
+gdp_f4b <- bf(cost_usd_main_yr ~ 0 + log(gdpcap):treatment_type + log(gdpcap):study_pop + 
+     (1 | iso3c) + (treatment_type | iso3c) + (study_pop | iso3c))
 
 ## THEN DO AGAIN WITH HCEPC INSTEAD OF GDPPC
+
+# 1. no interaction, random intercepts
+hce_f1 <- bf(cost_usd_main_yr ~ 0 + log(hce_cap) + treatment_type + study_pop + (1 | iso3c))
+# 2. no interaction, random slopes
+hce_f2a <- bf(cost_usd_main_yr ~ 0 + log(hce_cap) + (1 + treatment_type + study_pop | iso3c))
+# OR
+hce_f2b <- bf(cost_usd_main_yr ~ 0 + log(gdpcap) + (1 + treatment_type | iso3c) + (1 + study_pop | iso3c)) # TODO this one is throwing errors in brms
+# 3. interaction, no random slopes
+hce_f3 <- bf(cost_usd_main_yr ~ 0 + log(hce_cap):treatment_type + log(hce_cap):study_pop + (1 | iso3c))
+# 4. interaction, random slopes
+hce_f4a <- bf(cost_usd_main_yr ~ 0 + log(hce_cap):treatment_type + log(hce_cap):study_pop + 
+            (1 + treatment_type + study_pop | iso3c))
+#OR
+hce_f4b <- bf(cost_usd_main_yr ~ 0 + log(hce_cap):treatment_type + log(hce_cap):study_pop +
+            (1 + treatment_type | iso3c) + (1 + study_pop | iso3c)) # also errors here
 
 ## PLOT THE OUTCOMES AGAINST LOG GDPPC, WHAT DO THE DIFFERENT FORMULAE DO
 
@@ -39,35 +50,21 @@ bf(cost_usd_main_yr ~ 0 + log(gdpcap):treatment_type + log(gdpcap):study_pop +
 
 ########
 
-
-
-formula_gdppc <- 
-  bf(cost_usd_main_yr ~ 0 + log(gdpcap):study_pop + (1 | iso3c))
-formula_gdppc_hceprop <- 
-  bf(cost_usd_main_yr ~ 0 + log(gdpcap):study_pop + hce_prop_gdp:study_pop + (1 | iso3c))
-formula_gdppc_hcepc <- 
-  bf(cost_usd_main_yr ~ 0 + log(gdpcap):study_pop + log(hce_cap):study_pop + (1 | iso3c))
-formula_hcepc <- 
-  bf(cost_usd_main_yr ~ 0 + log(hce_cap):study_pop + (1 | iso3c))
-formula_hceprop <- 
-  bf(cost_usd_main_yr ~ 0 + hce_prop_gdp:study_pop + (1 | iso3c))
-
-formulas <- list(formula_gdppc,
-                 formula_gdppc_hceprop,
-                 formula_gdppc_hcepc,
-                 formula_hcepc,
-                 formula_hceprop)
-names(formulas) <- c('gdppc','gdppc_hceprop','gdppc_hcepc','hcepc','hceprop')
+formulas <- list(gdp_f1, gdp_f2a, gdp_f3, gdp_f4a,
+                 hce_f1, hce_f2a, hce_f3, hce_f4a)
+names(formulas) <- c('GDP_no_interaction_rand_intercept','GDP_no_interaction_rand_slope',#'GDP_no_interaction_rand_slope_b',
+                     'GDP_interaction_rand_intercept','GDP_interaction_rand_slope',#'GDP_interaction_rand_slope_b',
+                     'HCE_no_interaction_rand_intercept','HCE_no_interaction_rand_slope',#'HCE_no_interaction_rand_slope_b',
+                     'HCE_interaction_rand_intercept','HCE_interaction_rand_slope')#,'HCE_interaction_rand_slope_b')
 
 #### RUN BRMS ####
 # using Gamma(link = "log") to ensure cost >= 0
 
-## hospitalisations
-lms_hosp <- map(
+lms <- map(
   .x = formulas,
   .f = ~{brms::brm(
     formula = .x,
-    data = use_hosp %>% drop_na(),
+    data = costs_gdp %>% drop_na(),
     family = Gamma(link = "log"),
     chains = 3, cores = 3, 
     iter = 4000,
@@ -75,18 +72,6 @@ lms_hosp <- map(
   )}
 )
 
-## outpatients
-lms_outp <- map(
-  .x = formulas,
-  .f = ~{brms::brm(
-    formula = .x,
-    data = use_outp %>% drop_na(),
-    family = Gamma(link = "log"),
-    chains = 3, cores = 3, 
-    iter = 4000,
-    control = list(max_treedepth = 20)
-  )}
-)
 
 #### MODEL COMPARISONS #### 
 
@@ -96,107 +81,34 @@ lms_outp <- map(
 
 ## hospitalisations
 
-loos_hosp <- map(
-  .x = lms_hosp,
+loos_ <- map(
+  .x = lms,
   .f = loo
 )
 
-loos_hosp_scores <- loo_compare(loos_hosp)
-
-## outpatients
-
-loos_outp <- map(
-  .x = lms_outp,
-  .f = loo
-)
-
-loos_outp_scores <- loo_compare(loos_outp)
+loos_scores <- loo_compare(loos_)
 
 # print scores
-cat('------------------\nHospitalisation LOO compare:\n');loos_hosp_scores;cat('------------------\nOutpatient LOO compare:\n');loos_outp_scores
+cat('------------------\nLOO compare:\n');loos_scores
 
 # pick best model
-pref_hosp_model_name <- rownames(loos_hosp_scores)[1]
-pref_outp_model_name <- rownames(loos_outp_scores)[1]
+pref_model_name <- rownames(loos_scores)[1]
 
-hosp_model <- lms_hosp[[pref_hosp_model_name]]
-outp_model <- lms_outp[[pref_outp_model_name]]
+pref_model <- lms[[pref_model_name]]
 
 #### PREDICTED COSTS ####
 
-# # fix hce_prop_gdp at median (or some value)
-# fixed_HCE <- median(costs_gdp$hce_prop_gdp, na.rm = TRUE)
-# 
-# # fix gdpcap at median (or some value)
-# fixed_gdpcap <- median(costs_gdp$gdpcap, na.rm = TRUE)
-# 
-# # Create grid for GDPpc varying, HCE fixed
-# newdata_gdp <- expand.grid(
-#   gdpcap = seq(min(costs_gdp$gdpcap, na.rm = TRUE), 
-#                max(costs_gdp$gdpcap, na.rm = TRUE), 
-#                length.out = 100),
-#   hce_prop_gdp = fixed_HCE,
-#   study_pop = unique(costs_gdp$study_pop)
-# )
-# 
-# # Create grid for HCE varying, GDPpc fixed
-# newdata_hce <- expand.grid(
-#   gdpcap = fixed_gdpcap,
-#   hce_prop_gdp = seq(min(costs_gdp$hce_prop_gdp, na.rm = TRUE), 
-#                      max(costs_gdp$hce_prop_gdp, na.rm = TRUE), 
-#                      length.out = 100),
-#   study_pop = unique(costs_gdp$study_pop)
-# )
-# 
-# # Create grid with both HCE and GDPpc varying
-# tile_data <- expand.grid(
-#   gdpcap = seq(min(costs_gdp$gdpcap, na.rm = TRUE), 
-#                max(costs_gdp$gdpcap, na.rm = TRUE), 
-#                length.out = 100),
-#   hce_prop_gdp = seq(min(costs_gdp$hce_prop_gdp, na.rm = TRUE), 
-#                      max(costs_gdp$hce_prop_gdp, na.rm = TRUE), 
-#                      length.out = 100),
-#   study_pop = unique(costs_gdp$study_pop)
-# )
-
 newdata_hce <- expand.grid(
   hce_cap = seq(min(costs_gdp$hce_cap, na.rm = TRUE),
-                     max(costs_gdp$hce_cap, na.rm = TRUE),
-                     length.out = 3000),
-  study_pop = unique(costs_gdp$study_pop)
+                max(costs_gdp$hce_cap, na.rm = TRUE),
+                length.out = 3000),
+  study_pop = unique(costs_gdp$study_pop),
+  treatment_type = unique(costs_gdp$treatment_type)
 )
 
-#### PRED: HOSPITALISATION ####
-
-# pred_gdp_hosp <- predict(hosp_model, newdata = newdata_hce, re_formula = NA, probs = interval_probs) %>%
-#   as_tibble() %>%
-#   bind_cols(newdata_gdp)
-
-pred_hce_hosp <- predict(hosp_model, newdata = newdata_hce, re_formula = NA, probs = interval_probs) %>%
+pred_hce <- predict(pref_model, newdata = newdata_hce, re_formula = NA, probs = interval_probs) %>%
   as_tibble() %>%
   bind_cols(newdata_hce)
-
-# pred_tile_hosp <- predict(hosp_model, newdata = tile_data, re_formula = NA, probs = interval_probs) %>%
-#   as_tibble() %>%
-#   bind_cols(tile_data)
-
-
-#### PRED: OUTPATIENT ####
-
-# pred_gdp_outp <- predict(outp_model, newdata = newdata_gdp, re_formula = NA, probs = interval_probs) %>%
-#   as_tibble() %>%
-#   bind_cols(newdata_gdp)
-
-pred_hce_outp <- predict(outp_model, newdata = newdata_hce, re_formula = NA, probs = interval_probs) %>%
-  as_tibble() %>%
-  bind_cols(newdata_hce)
-
-# pred_tile_outp <- predict(outp_model, newdata = tile_data, re_formula = NA, probs = interval_probs) %>%
-#   as_tibble() %>%
-#   bind_cols(tile_data)
-
-
-
 
 
 
