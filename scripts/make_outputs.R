@@ -22,35 +22,48 @@ data_wdi <- data.frame(iso3c = isos) %>%
   left_join(gdp_data %>% select(country,iso3c,NY.GDP.PCAP.KD), by = 'iso3c') %>% 
   left_join(hce_data %>% select(iso3c,SH.XPD.CHEX.PC.CD), by = 'iso3c')
 
-colnames(data_wdi) <- c('iso3c','country','gdpcap','hcecap')
+colnames(data_wdi) <- c('iso3c','country','gdpcap','hce_cap')
 
-data_wdi <- rbind(data_wdi %>% mutate(study_pop = 'adult'),
-                  data_wdi %>% mutate(study_pop = 'children'),
-                  data_wdi %>% mutate(study_pop = 'elderly')) %>% mutate(hce_prop_gdp = hcecap/gdpcap)
+data_wdi_long <- rbind(data_wdi %>% mutate(study_pop = 'adult', treatment_type = 'hosp'),
+                  data_wdi %>% mutate(study_pop = 'children', treatment_type = 'hosp'),
+                  data_wdi %>% mutate(study_pop = 'elderly', treatment_type = 'hosp'),
+                  data_wdi %>% mutate(study_pop = 'adult', treatment_type = 'outp'),
+                  data_wdi %>% mutate(study_pop = 'children', treatment_type = 'outp'),
+                  data_wdi %>% mutate(study_pop = 'elderly', treatment_type = 'outp')) 
+
+data_wdi_incl_iso <- data_wdi_long %>% filter(iso3c %in% costs_gdp$iso3c)
+
+data_wdi_no_iso <- data_wdi_long %>% filter(iso3c %notin% costs_gdp$iso3c)
 
 ## predict model
 
-## hospitalisation
-
-hospitalisation_table <- predict(hosp_model, newdata = data_wdi, re_formula = NA, probs = interval_probs) %>%
+out_table_incl_iso <- predict(pref_model, newdata = data_wdi_incl_iso, probs = interval_probs) %>%
   as_tibble() %>%
-  bind_cols(data_wdi) %>% 
-  mutate(outcome = 'hospitalisation') %>% 
-  arrange(study_pop, country)
+  bind_cols(data_wdi_incl_iso) 
 
-write_csv(hospitalisation_table, 
-          here::here('output','hospitalisation_table.csv'))
-
-## outpatient
-
-outpatient_table <- predict(outp_model, newdata = data_wdi, re_formula = NA, probs = interval_probs) %>%
+out_table_no_iso <- predict(pref_model, newdata = data_wdi_no_iso, re_formula = NA, probs = interval_probs) %>%
   as_tibble() %>%
-  bind_cols(data_wdi) %>% 
-  mutate(outcome = 'outpatient') %>% 
-  arrange(study_pop, country)
+  bind_cols(data_wdi_no_iso)
 
-write_csv(outpatient_table, 
-          here::here('output','outpatient_table.csv'))
+out_table <- rbind(out_table_incl_iso,
+                   out_table_no_iso)
+
+out_table <- out_table %>% 
+  arrange(treatment_type, study_pop, hce_cap) %>% 
+  select(iso3c, country, gdpcap, hce_cap, treatment_type, study_pop, Estimate, Est.Error, starts_with('Q')) %>% 
+  mutate(treatment_type = case_when(treatment_type == 'hosp' ~ 'Hospitalisation', T ~ 'Outpatient'),
+         study_pop = case_when(study_pop == 'adult' ~ 'Adults', study_pop == 'children' ~ 'Children', T ~ 'Elderly')) %>% 
+  mutate(Estimate = format(round(Estimate, 2), nsmall = 2), 
+         Est.Error = format(round(Est.Error, 2), nsmall = 2),
+         Q2.5 = format(round(Q2.5, 2), nsmall = 2),
+         Q97.5 = format(round(Q97.5, 2), nsmall = 2))
+
+colnames(out_table) <- c('ISO Code','Country','GDP per capita','Healthcare expenditure per capita',
+                         'Treatment type','Age group','Estimated cost','Estimated error','Lower CI','Upper CI')
+
+write_csv(out_table, 
+          here::here('output','outcome_table.csv'))
+
 
 
 

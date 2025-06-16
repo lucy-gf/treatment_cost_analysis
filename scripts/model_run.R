@@ -34,7 +34,7 @@ hce_f1 <- bf(cost_usd_main_yr ~ 0 + log(hce_cap) + treatment_type + study_pop + 
 # 2. no interaction, random slopes
 hce_f2a <- bf(cost_usd_main_yr ~ 0 + log(hce_cap) + (1 + treatment_type + study_pop | iso3c))
 # OR
-hce_f2b <- bf(cost_usd_main_yr ~ 0 + log(gdpcap) + (1 + treatment_type | iso3c) + (1 + study_pop | iso3c)) # TODO this one is throwing errors in brms
+hce_f2b <- bf(cost_usd_main_yr ~ 0 + log(hce_cap) + (1 + treatment_type | iso3c) + (1 + study_pop | iso3c)) 
 # 3. interaction, no random slopes
 hce_f3 <- bf(cost_usd_main_yr ~ 0 + log(hce_cap):treatment_type + log(hce_cap):study_pop + (1 | iso3c))
 # 4. interaction, random slopes
@@ -79,8 +79,6 @@ lms <- map(
 # a positive difference favors the first model
 # differences larger than about 4–5 are considered meaningful
 
-## hospitalisations
-
 loos_ <- map(
   .x = lms,
   .f = loo
@@ -98,6 +96,12 @@ pref_model <- lms[[pref_model_name]]
 
 #### PREDICTED COSTS ####
 
+# plot predictions against observed data
+pred_obs <- fitted(pref_model, newdata = costs_gdp, re_formula = NA, probs = interval_probs) %>%
+  as_tibble() %>%
+  bind_cols(costs_gdp) %>% 
+  drop_na() 
+
 newdata_hce <- expand.grid(
   hce_cap = seq(min(costs_gdp$hce_cap, na.rm = TRUE),
                 max(costs_gdp$hce_cap, na.rm = TRUE),
@@ -106,11 +110,30 @@ newdata_hce <- expand.grid(
   treatment_type = unique(costs_gdp$treatment_type)
 )
 
+newdata_gdp <- expand.grid(
+  gdpcap = seq(min(costs_gdp$gdpcap, na.rm = TRUE),
+               max(costs_gdp$gdpcap, na.rm = TRUE),
+               length.out = 3000),
+  study_pop = unique(costs_gdp$study_pop),
+  treatment_type = unique(costs_gdp$treatment_type)
+)
+
 pred_hce <- predict(pref_model, newdata = newdata_hce, re_formula = NA, probs = interval_probs) %>%
   as_tibble() %>%
   bind_cols(newdata_hce)
 
+pred_hce_all_models_list <- map(
+  .x = 1:length(lms),
+  .f = ~{
+    predict(lms[[.x]], newdata = if(grepl('HCE', names(lms)[.x])){newdata_hce}else{newdata_gdp}, 
+            re_formula = NA, probs = interval_probs) %>%
+      as_tibble() %>%
+      bind_cols(if(grepl('HCE', names(lms)[.x])){newdata_hce}else{newdata_gdp}) %>% 
+      mutate(model = names(lms)[.x])
+  }
+)
 
+pred_hce_all_models <- rbindlist(pred_hce_all_models_list)
 
 
 

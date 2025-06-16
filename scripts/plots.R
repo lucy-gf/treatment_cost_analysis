@@ -1,12 +1,6 @@
 
 #### PRODUCING AND SAVING PLOTS AND TABLES ####
 
-# plot predictions against observed data
-pred_obs <- fitted(pref_model, newdata = costs_gdp, re_formula = NA, probs = interval_probs) %>%
-  as_tibble() %>%
-  bind_cols(costs_gdp) %>% 
-  drop_na() 
-
 # colorscale <- c('#a50f15','#fb6a4a','#fcbba1','#9e9ac8','#54278f')
 colorscale <- rev(c('#a50f15','#fb6a4a','#fdae6b','#9ecae1','#6baed6','#08519c'))
 breaks <- seq(min(pred_obs$hce_prop_gdp), max(pred_obs$hce_prop_gdp), length.out = length(colorscale))
@@ -79,7 +73,7 @@ write_csv(pred_obs_save,
           here::here('output','observed_vs_predicted.csv'))
 
 ggplot(pred_hce, aes(x = hce_cap, y = Estimate, color = study_pop, fill = study_pop)) +
-  geom_line(lwd = 1) +
+  geom_line(lwd = 1) + 
   geom_ribbon(aes(ymin = get(paste0('Q', 100*interval_probs[1])), ymax = get(paste0('Q', 100*interval_probs[2]))), alpha = 0.2, color = NA) +
   labs(
     x = "Healthcare expenditure by capita",
@@ -90,13 +84,31 @@ ggplot(pred_hce, aes(x = hce_cap, y = Estimate, color = study_pop, fill = study_
   theme_bw() + facet_grid(treatment_type ~ ., scales = 'free', 
                           labeller = labeller(treatment_type = outcome_labels)) +  
   theme(text = element_text(size = 12)) + 
-  scale_fill_manual(values = age_colors) + 
-  scale_color_manual(values = age_colors)
+  scale_fill_manual(values = age_colors, labels = pop_labels) + 
+  scale_color_manual(values = age_colors, labels = pop_labels)
 
 ggsave(here::here('plots','predicted_costs_line_grid.png'),
        width = 12, height = 8)
 
 # TODO What is this actually predicting? Why isn't it one line?
+
+ggplot(pred_hce_all_models, aes(x = gdpcap, y = Estimate, color = study_pop, fill = study_pop)) +
+  geom_line(lwd = 1) +
+  geom_ribbon(aes(ymin = get(paste0('Q', 100*interval_probs[1])), ymax = get(paste0('Q', 100*interval_probs[2]))), alpha = 0.2, color = NA) +
+  labs(
+    x = "",
+    y = "Predicted cost ($XXXX)",
+    fill = 'Age group',
+    color = 'Age group'
+  ) + scale_x_log10() + ylim(c(0,NA)) +
+  theme_bw() + facet_wrap(treatment_type ~ model, scales = 'free', 
+                          labeller = labeller(treatment_type = outcome_labels)) +  
+  theme(text = element_text(size = 12)) + 
+  scale_fill_manual(values = age_colors, labels = pop_labels) + 
+  scale_color_manual(values = age_colors, labels = pop_labels)
+
+ggsave(here::here('plots','predicted_costs_line_grid_all_models.png'),
+       width = 20, height = 14)
 
 # #### HEATMAPS #### 
 # 
