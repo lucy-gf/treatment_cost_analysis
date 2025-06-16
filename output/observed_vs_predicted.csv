@@ -1,158 +1,158 @@
 Country,ISO3C,Age group,Treatment,Observed,Predicted,Lower CI,Upper CI
-Belgium,BEL,adult,hosp,6885,7566,3666,13341
-Belgium,BEL,adult,hosp,10461,7566,3666,13341
-Canada,CAN,adult,hosp,13183,8815,4215,15679
-Germany,DEU,adult,hosp,66,8708,4168,15477
-Thailand,THA,adult,hosp,579,461,283,689
-United States,USA,adult,hosp,9401,18083,8123,33502
-United States,USA,adult,hosp,41435,18083,8123,33502
-United States,USA,adult,hosp,48577,18083,8123,33502
-United States,USA,adult,hosp,7713,18083,8123,33502
-United States,USA,adult,hosp,30188,18083,8123,33502
-United States,USA,adult,hosp,35415,18083,8123,33502
-United States,USA,adult,hosp,6941,18083,8123,33502
-Argentina,ARG,children,hosp,2659,1427,838,2262
-China,CHN,children,hosp,423,695,432,1056
-China,CHN,children,hosp,1162,695,432,1056
-China,CHN,children,hosp,1050,695,432,1056
-China,CHN,children,hosp,411,695,432,1056
-China,CHN,children,hosp,76,695,432,1056
-Colombia,COL,children,hosp,1336,521,331,778
-Colombia,COL,children,hosp,1237,521,331,778
-Colombia,COL,children,hosp,983,521,331,778
-El Salvador,SLV,children,hosp,174,517,328,771
-Finland,FIN,children,hosp,1876,5173,2749,8836
-Finland,FIN,children,hosp,2492,5173,2749,8836
-Germany,DEU,children,hosp,4284,6542,3412,11324
-Germany,DEU,children,hosp,75,6542,3412,11324
-Germany,DEU,children,hosp,3214,6542,3412,11324
-Italy,ITA,children,hosp,2780,3292,1812,5478
-Italy,ITA,children,hosp,2830,3292,1812,5478
-Italy,ITA,children,hosp,3237,3292,1812,5478
-Italy,ITA,children,hosp,3135,3292,1812,5478
-Kenya,KEN,children,hosp,78,92,67,124
-Mexico,MEX,children,hosp,13346,673,419,1020
-Panama,PAN,children,hosp,532,1534,896,2441
-South Africa,ZAF,children,hosp,642,588,370,885
-Spain,ESP,children,hosp,4649,3054,1691,5061
-Spain,ESP,children,hosp,4248,3054,1691,5061
-Thailand,THA,children,hosp,272,381,247,557
-Thailand,THA,children,hosp,176,381,247,557
-Thailand,THA,children,hosp,465,381,247,557
-Thailand,THA,children,hosp,316,381,247,557
-Thailand,THA,children,hosp,418,381,247,557
-Thailand,THA,children,hosp,405,381,247,557
-Thailand,THA,children,hosp,385,381,247,557
-Thailand,THA,children,hosp,314,381,247,557
-United Kingdom,GBR,children,hosp,6344,5316,2818,9094
-United Kingdom,GBR,children,hosp,5027,5316,2818,9094
-United States,USA,children,hosp,3994,13269,6544,23907
-United States,USA,children,hosp,8462,13269,6544,23907
-Vietnam,VNM,children,hosp,90,193,132,272
-Australia,AUS,elderly,hosp,5496,7974,5090,12008
-Austria,AUT,elderly,hosp,5166,6911,4445,10344
-Canada,CAN,elderly,hosp,4013,7398,4741,11105
-Canada,CAN,elderly,hosp,3218,7398,4741,11105
-China,CHN,elderly,hosp,1540,759,547,1031
-China,CHN,elderly,hosp,2087,759,547,1031
-China,CHN,elderly,hosp,153,759,547,1031
-Colombia,COL,elderly,hosp,6449,567,415,761
-Colombia,COL,elderly,hosp,4754,567,415,761
-Germany,DEU,elderly,hosp,5445,7310,4688,10968
-Germany,DEU,elderly,hosp,4444,7310,4688,10968
-Germany,DEU,elderly,hosp,3698,7310,4688,10968
-Germany,DEU,elderly,hosp,5855,7310,4688,10968
-Japan,JPN,elderly,hosp,3027,4553,2993,6693
-Japan,JPN,elderly,hosp,3194,4553,2993,6693
-Kazakhstan,KAZ,elderly,hosp,213,470,348,626
-Mexico,MEX,elderly,hosp,2339,734,530,996
-Mexico,MEX,elderly,hosp,1832,734,530,996
-Netherlands,NLD,elderly,hosp,5140,6844,4404,10239
-New Zealand,NZL,elderly,hosp,3461,5650,3672,8383
-New Zealand,NZL,elderly,hosp,5545,5650,3672,8383
-Poland,POL,elderly,hosp,698,1362,953,1900
-Poland,POL,elderly,hosp,1937,1362,953,1900
-Romania,ROU,elderly,hosp,1133,1024,727,1411
-South Africa,ZAF,elderly,hosp,914,641,466,864
-Spain,ESP,elderly,hosp,5691,3386,2261,4915
-Spain,ESP,elderly,hosp,5142,3386,2261,4915
-Thailand,THA,elderly,hosp,463,412,307,546
-United Kingdom,GBR,elderly,hosp,5735,5928,3843,8814
-United Kingdom,GBR,elderly,hosp,4562,5928,3843,8814
-United Kingdom,GBR,elderly,hosp,5289,5928,3843,8814
-United Kingdom,GBR,elderly,hosp,4585,5928,3843,8814
-United Kingdom,GBR,elderly,hosp,5430,5928,3843,8814
-United States,USA,elderly,hosp,43894,14931,9223,23096
-United States,USA,elderly,hosp,18182,14931,9223,23096
-United States,USA,elderly,hosp,6335,14931,9223,23096
-United States,USA,elderly,hosp,37339,14931,9223,23096
-United States,USA,elderly,hosp,7342,14931,9223,23096
-United States,USA,elderly,hosp,7888,14931,9223,23096
-United States,USA,elderly,hosp,22437,14931,9223,23096
-United States,USA,elderly,hosp,13422,14931,9223,23096
-Vietnam,VNM,elderly,hosp,265,208,160,267
-Brazil,BRA,adult,outp,4,46,25,75
-China,CHN,adult,outp,71,41,23,65
-Germany,DEU,adult,outp,13,146,66,267
-Germany,DEU,adult,outp,34,146,66,267
-Japan,JPN,adult,outp,100,111,52,198
-Netherlands,NLD,adult,outp,108,140,64,256
-United States,USA,adult,outp,591,218,92,418
-United States,USA,adult,outp,784,218,92,418
-United States,USA,adult,outp,612,218,92,418
-United States,USA,adult,outp,1650,218,92,418
-United States,USA,adult,outp,1147,218,92,418
-United States,USA,adult,outp,93,218,92,418
-United States,USA,adult,outp,1096,218,92,418
-United States,USA,adult,outp,911,218,92,418
-United States,USA,adult,outp,443,218,92,418
-United States,USA,adult,outp,478,218,92,418
-United States,USA,adult,outp,445,218,92,418
-United States,USA,adult,outp,696,218,92,418
-United States,USA,adult,outp,237,218,92,418
-United States,USA,adult,outp,178,218,92,418
-United States,USA,adult,outp,183,218,92,418
-United States,USA,adult,outp,44,218,92,418
-Argentina,ARG,children,outp,39,48,27,76
-China,CHN,children,outp,94,33,19,50
-China,CHN,children,outp,120,33,19,50
-China,CHN,children,outp,97,33,19,50
-China,CHN,children,outp,107,33,19,50
-China,CHN,children,outp,80,33,19,50
-China,CHN,children,outp,31,33,19,50
-China,CHN,children,outp,93,33,19,50
-Colombia,COL,children,outp,140,28,17,42
-Colombia,COL,children,outp,104,28,17,42
-Germany,DEU,children,outp,100,109,53,188
-Germany,DEU,children,outp,15,109,53,188
-Germany,DEU,children,outp,75,109,53,188
-Italy,ITA,children,outp,109,75,39,125
-Italy,ITA,children,outp,122,75,39,125
+Belgium,BEL,adult,hosp,6885,7488,3529,13189
+Belgium,BEL,adult,hosp,10461,7488,3529,13189
+Canada,CAN,adult,hosp,13183,8717,4052,15488
+Germany,DEU,adult,hosp,66,8611,4007,15290
+Thailand,THA,adult,hosp,579,463,279,692
+United States,USA,adult,hosp,9401,17818,7764,32961
+United States,USA,adult,hosp,41435,17818,7764,32961
+United States,USA,adult,hosp,48577,17818,7764,32961
+United States,USA,adult,hosp,7713,17818,7764,32961
+United States,USA,adult,hosp,30188,17818,7764,32961
+United States,USA,adult,hosp,35415,17818,7764,32961
+United States,USA,adult,hosp,6941,17818,7764,32961
+Argentina,ARG,children,hosp,2659,1434,828,2310
+China,CHN,children,hosp,423,701,428,1080
+China,CHN,children,hosp,1162,701,428,1080
+China,CHN,children,hosp,1050,701,428,1080
+China,CHN,children,hosp,411,701,428,1080
+China,CHN,children,hosp,76,701,428,1080
+Colombia,COL,children,hosp,1336,526,329,797
+Colombia,COL,children,hosp,1237,526,329,797
+Colombia,COL,children,hosp,983,526,329,797
+El Salvador,SLV,children,hosp,174,522,326,790
+Finland,FIN,children,hosp,1876,5172,2695,8997
+Finland,FIN,children,hosp,2492,5172,2695,8997
+Germany,DEU,children,hosp,4284,6534,3340,11525
+Germany,DEU,children,hosp,75,6534,3340,11525
+Germany,DEU,children,hosp,3214,6534,3340,11525
+Italy,ITA,children,hosp,2780,3297,1781,5584
+Italy,ITA,children,hosp,2830,3297,1781,5584
+Italy,ITA,children,hosp,3237,3297,1781,5584
+Italy,ITA,children,hosp,3135,3297,1781,5584
+Kenya,KEN,children,hosp,78,94,67,127
+Mexico,MEX,children,hosp,13346,678,416,1044
+Panama,PAN,children,hosp,532,1541,885,2492
+South Africa,ZAF,children,hosp,642,593,368,905
+Spain,ESP,children,hosp,4649,3060,1663,5159
+Spain,ESP,children,hosp,4248,3060,1663,5159
+Thailand,THA,children,hosp,272,385,246,571
+Thailand,THA,children,hosp,176,385,246,571
+Thailand,THA,children,hosp,465,385,246,571
+Thailand,THA,children,hosp,316,385,246,571
+Thailand,THA,children,hosp,418,385,246,571
+Thailand,THA,children,hosp,405,385,246,571
+Thailand,THA,children,hosp,385,385,246,571
+Thailand,THA,children,hosp,314,385,246,571
+United Kingdom,GBR,children,hosp,6344,5314,2763,9259
+United Kingdom,GBR,children,hosp,5027,5314,2763,9259
+United States,USA,children,hosp,3994,13218,6379,24291
+United States,USA,children,hosp,8462,13218,6379,24291
+Vietnam,VNM,children,hosp,90,196,132,279
+Australia,AUS,elderly,hosp,5496,7959,5023,11700
+Austria,AUT,elderly,hosp,5166,6903,4390,10089
+Canada,CAN,elderly,hosp,4013,7387,4681,10826
+Canada,CAN,elderly,hosp,3218,7387,4681,10826
+China,CHN,elderly,hosp,1540,765,547,1022
+China,CHN,elderly,hosp,2087,765,547,1022
+China,CHN,elderly,hosp,153,765,547,1022
+Colombia,COL,elderly,hosp,6449,572,415,755
+Colombia,COL,elderly,hosp,4754,572,415,755
+Germany,DEU,elderly,hosp,5445,7300,4628,10693
+Germany,DEU,elderly,hosp,4444,7300,4628,10693
+Germany,DEU,elderly,hosp,3698,7300,4628,10693
+Germany,DEU,elderly,hosp,5855,7300,4628,10693
+Japan,JPN,elderly,hosp,3027,4555,2962,6547
+Japan,JPN,elderly,hosp,3194,4555,2962,6547
+Kazakhstan,KAZ,elderly,hosp,213,475,348,622
+Mexico,MEX,elderly,hosp,2339,740,530,987
+Mexico,MEX,elderly,hosp,1832,740,530,987
+Netherlands,NLD,elderly,hosp,5140,6836,4349,9987
+New Zealand,NZL,elderly,hosp,3461,5648,3630,8188
+New Zealand,NZL,elderly,hosp,5545,5648,3630,8188
+Poland,POL,elderly,hosp,698,1370,949,1874
+Poland,POL,elderly,hosp,1937,1370,949,1874
+Romania,ROU,elderly,hosp,1133,1031,725,1394
+South Africa,ZAF,elderly,hosp,914,646,466,857
+Spain,ESP,elderly,hosp,5691,3392,2241,4818
+Spain,ESP,elderly,hosp,5142,3392,2241,4818
+Thailand,THA,elderly,hosp,463,417,307,543
+United Kingdom,GBR,elderly,hosp,5735,5924,3799,8606
+United Kingdom,GBR,elderly,hosp,4562,5924,3799,8606
+United Kingdom,GBR,elderly,hosp,5289,5924,3799,8606
+United Kingdom,GBR,elderly,hosp,4585,5924,3799,8606
+United Kingdom,GBR,elderly,hosp,5430,5924,3799,8606
+United States,USA,elderly,hosp,43894,14864,9071,22403
+United States,USA,elderly,hosp,18182,14864,9071,22403
+United States,USA,elderly,hosp,6335,14864,9071,22403
+United States,USA,elderly,hosp,37339,14864,9071,22403
+United States,USA,elderly,hosp,7342,14864,9071,22403
+United States,USA,elderly,hosp,7888,14864,9071,22403
+United States,USA,elderly,hosp,22437,14864,9071,22403
+United States,USA,elderly,hosp,13422,14864,9071,22403
+Vietnam,VNM,elderly,hosp,265,211,161,266
+Brazil,BRA,adult,outp,4,46,25,76
+China,CHN,adult,outp,71,41,22,66
+Germany,DEU,adult,outp,13,145,64,272
+Germany,DEU,adult,outp,34,145,64,272
+Japan,JPN,adult,outp,100,111,51,202
+Netherlands,NLD,adult,outp,108,140,62,261
+United States,USA,adult,outp,591,217,89,426
+United States,USA,adult,outp,784,217,89,426
+United States,USA,adult,outp,612,217,89,426
+United States,USA,adult,outp,1650,217,89,426
+United States,USA,adult,outp,1147,217,89,426
+United States,USA,adult,outp,93,217,89,426
+United States,USA,adult,outp,1096,217,89,426
+United States,USA,adult,outp,911,217,89,426
+United States,USA,adult,outp,443,217,89,426
+United States,USA,adult,outp,478,217,89,426
+United States,USA,adult,outp,445,217,89,426
+United States,USA,adult,outp,696,217,89,426
+United States,USA,adult,outp,237,217,89,426
+United States,USA,adult,outp,178,217,89,426
+United States,USA,adult,outp,183,217,89,426
+United States,USA,adult,outp,44,217,89,426
+Argentina,ARG,children,outp,39,48,27,79
+China,CHN,children,outp,94,33,19,52
+China,CHN,children,outp,120,33,19,52
+China,CHN,children,outp,97,33,19,52
+China,CHN,children,outp,107,33,19,52
+China,CHN,children,outp,80,33,19,52
+China,CHN,children,outp,31,33,19,52
+China,CHN,children,outp,93,33,19,52
+Colombia,COL,children,outp,140,28,17,43
+Colombia,COL,children,outp,104,28,17,43
+Germany,DEU,children,outp,100,109,53,196
+Germany,DEU,children,outp,15,109,53,196
+Germany,DEU,children,outp,75,109,53,196
+Italy,ITA,children,outp,109,76,39,130
+Italy,ITA,children,outp,122,76,39,130
 Kenya,KEN,children,outp,9,11,8,15
-South Africa,ZAF,children,outp,29,30,18,45
-Spain,ESP,children,outp,76,72,38,120
-Spain,ESP,children,outp,59,72,38,120
-Thailand,THA,children,outp,24,24,15,35
-Thailand,THA,children,outp,30,24,15,35
-Thailand,THA,children,outp,28,24,15,35
-United Kingdom,GBR,children,outp,159,97,49,166
-United Kingdom,GBR,children,outp,118,97,49,166
-United States,USA,children,outp,110,159,73,286
-Australia,AUS,elderly,outp,44,129,67,220
-Austria,AUT,elderly,outp,42,120,63,202
-China,CHN,elderly,outp,55,36,22,54
-China,CHN,elderly,outp,56,36,22,54
-Colombia,COL,elderly,outp,104,31,20,45
-Germany,DEU,elderly,outp,46,124,65,209
-Japan,JPN,elderly,outp,158,95,52,157
-Japan,JPN,elderly,outp,112,95,52,157
-Kazakhstan,KAZ,elderly,outp,14,28,18,40
-New Zealand,NZL,elderly,outp,26,107,57,179
-New Zealand,NZL,elderly,outp,23,107,57,179
-Poland,POL,elderly,outp,10,49,30,76
-Poland,POL,elderly,outp,28,49,30,76
-Romania,ROU,elderly,outp,29,42,26,64
+South Africa,ZAF,children,outp,29,30,18,47
+Spain,ESP,children,outp,76,73,38,125
+Spain,ESP,children,outp,59,73,38,125
+Thailand,THA,children,outp,24,24,15,36
+Thailand,THA,children,outp,30,24,15,36
+Thailand,THA,children,outp,28,24,15,36
+United Kingdom,GBR,children,outp,159,98,48,173
+United Kingdom,GBR,children,outp,118,98,48,173
+United States,USA,children,outp,110,160,73,299
+Australia,AUS,elderly,outp,44,130,70,224
+Austria,AUT,elderly,outp,42,121,66,205
+China,CHN,elderly,outp,55,36,23,55
+China,CHN,elderly,outp,56,36,23,55
+Colombia,COL,elderly,outp,104,31,20,46
+Germany,DEU,elderly,outp,46,124,67,212
+Japan,JPN,elderly,outp,158,96,54,160
+Japan,JPN,elderly,outp,112,96,54,160
+Kazakhstan,KAZ,elderly,outp,14,28,19,41
+New Zealand,NZL,elderly,outp,26,108,60,182
+New Zealand,NZL,elderly,outp,23,108,60,182
+Poland,POL,elderly,outp,10,50,31,78
+Poland,POL,elderly,outp,28,50,31,78
+Romania,ROU,elderly,outp,29,43,27,65
 South Africa,ZAF,elderly,outp,28,33,21,49
-United Kingdom,GBR,elderly,outp,44,110,59,184
-United States,USA,elderly,outp,269,182,90,320
-United States,USA,elderly,outp,266,182,90,320
+United Kingdom,GBR,elderly,outp,44,111,61,187
+United States,USA,elderly,outp,269,183,94,325
+United States,USA,elderly,outp,266,183,94,325

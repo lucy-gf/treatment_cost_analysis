@@ -15,47 +15,39 @@ costs_gdp <- costs_gdp %>%
 # 1. no interaction, random intercepts
 gdp_f1 <- bf(cost_usd_main_yr ~ 0 + log(gdpcap) + treatment_type + study_pop + (1 | iso3c))
 # 2. no interaction, random slopes
-gdp_f2a <- bf(cost_usd_main_yr ~ 0 + log(gdpcap) + (1 + treatment_type + study_pop | iso3c))
-# OR
-gdp_f2b <- bf(cost_usd_main_yr ~ 0 + log(gdpcap) + (1 | iso3c) + (treatment_type | iso3c) + (study_pop | iso3c))
+gdp_f2 <- bf(cost_usd_main_yr ~ 0 + log(gdpcap) + (1 + treatment_type + study_pop | iso3c))
 # 3. interaction, no random slopes
 gdp_f3 <- bf(cost_usd_main_yr ~ 0 + log(gdpcap):treatment_type + log(gdpcap):study_pop + (1 | iso3c))
 # 4. interaction, random slopes
-gdp_f4a <- bf(cost_usd_main_yr ~ 0 + log(gdpcap):treatment_type + log(gdpcap):study_pop + 
+gdp_f4 <- bf(cost_usd_main_yr ~ 0 + log(gdpcap):treatment_type + log(gdpcap):study_pop + 
      (1 + treatment_type + study_pop | iso3c))
-#OR
-gdp_f4b <- bf(cost_usd_main_yr ~ 0 + log(gdpcap):treatment_type + log(gdpcap):study_pop + 
-     (1 | iso3c) + (treatment_type | iso3c) + (study_pop | iso3c))
+# 5. interaction, random slopes, no age
+gdp_f5 <- bf(cost_usd_main_yr ~ 0 + log(gdpcap):treatment_type + 
+               (1 + treatment_type | iso3c))
 
-## THEN DO AGAIN WITH HCEPC INSTEAD OF GDPPC
+## THEN WITH HCEPC INSTEAD OF GDPPC
 
 # 1. no interaction, random intercepts
 hce_f1 <- bf(cost_usd_main_yr ~ 0 + log(hce_cap) + treatment_type + study_pop + (1 | iso3c))
 # 2. no interaction, random slopes
-hce_f2a <- bf(cost_usd_main_yr ~ 0 + log(hce_cap) + (1 + treatment_type + study_pop | iso3c))
-# OR
-hce_f2b <- bf(cost_usd_main_yr ~ 0 + log(hce_cap) + (1 + treatment_type | iso3c) + (1 + study_pop | iso3c)) 
+hce_f2 <- bf(cost_usd_main_yr ~ 0 + log(hce_cap) + (1 + treatment_type + study_pop | iso3c))
 # 3. interaction, no random slopes
 hce_f3 <- bf(cost_usd_main_yr ~ 0 + log(hce_cap):treatment_type + log(hce_cap):study_pop + (1 | iso3c))
 # 4. interaction, random slopes
-hce_f4a <- bf(cost_usd_main_yr ~ 0 + log(hce_cap):treatment_type + log(hce_cap):study_pop + 
+hce_f4 <- bf(cost_usd_main_yr ~ 0 + log(hce_cap):treatment_type + log(hce_cap):study_pop + 
             (1 + treatment_type + study_pop | iso3c))
-#OR
-hce_f4b <- bf(cost_usd_main_yr ~ 0 + log(hce_cap):treatment_type + log(hce_cap):study_pop +
-            (1 + treatment_type | iso3c) + (1 + study_pop | iso3c)) # also errors here
-
-## PLOT THE OUTCOMES AGAINST LOG GDPPC, WHAT DO THE DIFFERENT FORMULAE DO
-
-# set of plots for each model
+# 5. interaction, random slopes, no age
+hce_f5 <- bf(cost_usd_main_yr ~ 0 + log(hce_cap):treatment_type + 
+               (1 + treatment_type | iso3c))
 
 ########
 
-formulas <- list(gdp_f1, gdp_f2a, gdp_f3, gdp_f4a,
-                 hce_f1, hce_f2a, hce_f3, hce_f4a)
-names(formulas) <- c('GDP_no_interaction_rand_intercept','GDP_no_interaction_rand_slope',#'GDP_no_interaction_rand_slope_b',
-                     'GDP_interaction_rand_intercept','GDP_interaction_rand_slope',#'GDP_interaction_rand_slope_b',
-                     'HCE_no_interaction_rand_intercept','HCE_no_interaction_rand_slope',#'HCE_no_interaction_rand_slope_b',
-                     'HCE_interaction_rand_intercept','HCE_interaction_rand_slope')#,'HCE_interaction_rand_slope_b')
+formulas <- list(gdp_f1, gdp_f2, gdp_f3, gdp_f4, gdp_f5,
+                 hce_f1, hce_f2, hce_f3, hce_f4, hce_f5)
+names(formulas) <- c('GDP_no_interaction_rand_intercept','GDP_no_interaction_rand_slope',
+                     'GDP_interaction_rand_intercept','GDP_interaction_rand_slope','GDP_interaction_rand_slope_no_age',
+                     'HCE_no_interaction_rand_intercept','HCE_no_interaction_rand_slope',
+                     'HCE_interaction_rand_intercept','HCE_interaction_rand_slope','HCE_interaction_rand_slope_no_age')
 
 #### RUN BRMS ####
 # using Gamma(link = "log") to ensure cost >= 0
@@ -89,6 +81,9 @@ loos_scores <- loo_compare(loos_)
 # print scores
 cat('------------------\nLOO compare:\n');loos_scores
 
+write_csv(data.frame(model = rownames(loos_scores), elpd_diff = round(loos_scores[,1],2)),
+          here::here('output','LOO_compare.csv'))
+
 # pick best model
 pref_model_name <- rownames(loos_scores)[1]
 
@@ -97,9 +92,12 @@ pref_model <- lms[[pref_model_name]]
 #### PREDICTED COSTS ####
 
 # plot predictions against observed data
-pred_obs <- fitted(pref_model, newdata = costs_gdp, re_formula = NA, probs = interval_probs) %>%
+pred_obs <- fitted(pref_model, newdata = costs_gdp %>% drop_na(), probs = interval_probs) %>%
   as_tibble() %>%
-  bind_cols(costs_gdp) %>% 
+  bind_cols(costs_gdp %>% drop_na()) %>% 
+  mutate(effects = 'rand_eff') %>% 
+  rbind(fitted(pref_model, newdata = costs_gdp %>% drop_na(), re_formula = NA, probs = interval_probs) %>% 
+          as_tibble() %>% mutate(effects = 'no_rand_eff') %>% bind_cols(costs_gdp %>% drop_na())) %>% 
   drop_na() 
 
 newdata_hce <- expand.grid(

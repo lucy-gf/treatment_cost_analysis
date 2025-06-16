@@ -1,54 +1,61 @@
 
 #### PRODUCING AND SAVING PLOTS AND TABLES ####
 
-# colorscale <- c('#a50f15','#fb6a4a','#fcbba1','#9e9ac8','#54278f')
-colorscale <- rev(c('#a50f15','#fb6a4a','#fdae6b','#9ecae1','#6baed6','#08519c'))
-breaks <- seq(min(pred_obs$hce_prop_gdp), max(pred_obs$hce_prop_gdp), length.out = length(colorscale))
+# residuals vs fitted values
 
-# pred_obs %>% 
-#   ggplot(aes(x = gdpcap, col = hce_prop_gdp)) +
-#   geom_point(aes(y = cost_usd_main_yr), 
-#              shape = 4, size = 3) +
-#   geom_point(aes(y = Estimate), shape = 1, size = 3) +
-#   geom_errorbar(aes(ymin = get(paste0('Q', 100*interval_probs[1])), ymax = get(paste0('Q', 100*interval_probs[2])))) + 
-#   labs(x = "GDP per capita ($XXXX)", y = "Treatment cost ($XXXX)", 
-#        col = 'Healthcare expenditure\nper capita as a proportion\nof GDP per capita') +
-#   scale_color_gradientn(colors = colorscale, values = scales::rescale(breaks)) +
-#   scale_x_log10(breaks = c(1000,3000,10000,30000,100000), limits = c(1000,100000)) + scale_y_log10() + 
-#   # scale_colour_continuous() + 
-#   theme_bw() + theme(text = element_text(size = 12)) + 
-#   facet_grid(outcome ~ study_pop, scales = 'free', 
-#              labeller = labeller(outcome = outcome_labels,
-#                                  study_pop = pop_labels))
+fitted_vals <- fitted(pref_model)[, "Estimate"]
+residuals <- residuals(pref_model)[, "Estimate"]
 
-pred_obs %>% 
-  ggplot(aes(x = hce_cap, col = study_pop)) +
-  geom_point(aes(y = cost_usd_main_yr), 
+r_v_f <- data.frame(fitted_vals = fitted_vals, residuals = residuals,
+                    study_pop = pref_model$data$study_pop, 
+                    treatment_type = pref_model$data$treatment_type)
+
+r_v_f %>%
+  ggplot() +
+  geom_point(aes(fitted_vals, abs(residuals), col = study_pop, shape = treatment_type),
              size = 3) +
-  # geom_point(aes(y = Estimate), shape = 1, size = 3) +
-  # geom_errorbar(aes(ymin = get(paste0('Q', 100*interval_probs[1])), ymax = get(paste0('Q', 100*interval_probs[2])))) + 
-  # labs(x = "GDP per capita ($XXXX)", y = "Treatment cost ($XXXX)") +
-  # scale_color_gradientn(colors = colorscale, values = scales::rescale(breaks)) +
-  scale_x_log10(breaks = c(100,300,1000,3000,10000,30000)) +
-  # scale_y_log10() +
-  # scale_colour_continuous() +
-  theme_bw() + theme(text = element_text(size = 12)) + 
-  facet_grid(outcome ~ ., scales = 'free_y', 
-             labeller = labeller(outcome = outcome_labels,
-                                 study_pop = pop_labels))
-
-pred_obs %>% 
-  ggplot(aes(x = hce_cap, col = gdpcap)) +
-  geom_point(aes(y = cost_usd_main_yr), 
-             shape = 4, size = 3) +
-  geom_point(aes(y = Estimate), shape = 1, size = 3) +
-  geom_errorbar(aes(ymin = get(paste0('Q', 100*interval_probs[1])), ymax = get(paste0('Q', 100*interval_probs[2])))) + 
-  labs(x = "Healthcare expenditure per capita ($XXXX)", y = "Treatment cost ($XXXX)", 
-       col = 'GDP per capita') +
-  scale_color_gradientn(colors = colorscale, values = scales::rescale(breaks)) +
-  scale_x_log10(breaks = c(100,300,1000,3000,10000,30000), limits = c(300,30000)) +
+  labs(x = "Fitted values", y = "Absolute residual values", col = 'Age group', shape = 'Treatment type') +
+  theme_bw() +
+  scale_color_manual(values = age_colors, labels = pop_labels) +
+  scale_shape_manual(values = c(16,1), labels = outcome_labels) +
+  scale_x_log10() +
   scale_y_log10() +
-  # scale_colour_continuous() +
+  theme(text = element_text(size = 10)) 
+
+ggsave(here::here('plots','fitted_vs_residuals.png'),
+       width = 8, height = 6)
+
+# colorscale <- c('#a50f15','#fb6a4a','#fcbba1','#9e9ac8','#54278f')
+# colorscale <- rev(c('#a50f15','#fb6a4a','#fdae6b','#9ecae1','#6baed6','#08519c'))
+# breaks <- seq(min(pred_obs$hce_cap), max(pred_obs$hce_cap), length.out = length(colorscale))
+
+ggplot() +
+  geom_line(data = pred_obs %>% filter(effects == 'no_rand_eff'), 
+             aes(x = hce_cap, y = Estimate, col = effects, group = effects), 
+            lty = 2, lwd = 0.8) +
+  geom_ribbon(data = pred_obs %>% filter(effects == 'no_rand_eff'),
+              aes(x = hce_cap, fill = effects,
+                  ymin = get(paste0('Q', 100*interval_probs[1])), 
+                  ymax = get(paste0('Q', 100*interval_probs[2]))),
+              alpha = 0.3) + 
+  geom_point(data = pred_obs %>% filter(effects == 'rand_eff'),
+             aes(x = hce_cap, y = Estimate, col = effects), 
+             shape = 1, size = 3) +
+  geom_errorbar(data = pred_obs %>% filter(effects == 'rand_eff'),
+                aes(x = hce_cap, col = effects,
+                    ymin = get(paste0('Q', 100*interval_probs[1])), 
+                    ymax = get(paste0('Q', 100*interval_probs[2]))),
+                lwd = 0.8) + 
+  geom_point(data = pred_obs %>% filter(effects == 'rand_eff'),
+             aes(x = hce_cap, y = cost_usd_main_yr), 
+             shape = 4, size = 3) +
+  labs(x = "Healthcare expenditure per capita ($2023)", 
+       y = "Treatment cost ($2023)", 
+       col = '', fill = '') +
+  # scale_color_gradientn(colors = colorscale, values = scales::rescale(breaks)) +
+  scale_x_log10(breaks = c(100,300,1000,3000,10000,30000), limits = c(80,30000)) +
+  scale_y_log10() +
+  scale_colour_manual(values = effect_colors, labels = effect_labels,  aesthetics = c("colour", "fill")) +
   theme_bw() + theme(text = element_text(size = 12)) + 
   facet_grid(outcome ~ study_pop, scales = 'free', 
              labeller = labeller(outcome = outcome_labels,
@@ -76,11 +83,13 @@ ggplot(pred_hce, aes(x = hce_cap, y = Estimate, color = study_pop, fill = study_
   geom_line(lwd = 1) + 
   geom_ribbon(aes(ymin = get(paste0('Q', 100*interval_probs[1])), ymax = get(paste0('Q', 100*interval_probs[2]))), alpha = 0.2, color = NA) +
   labs(
-    x = "Healthcare expenditure by capita",
-    y = "Predicted cost ($XXXX)",
+    x = "Healthcare expenditure per capita ($2023)",
+    y = "Predicted cost ($2023)",
     fill = 'Age group',
     color = 'Age group'
-  ) + scale_x_log10() + ylim(c(0,NA)) +
+  ) + 
+  scale_x_log10() + 
+  # scale_y_log10() + 
   theme_bw() + facet_grid(treatment_type ~ ., scales = 'free', 
                           labeller = labeller(treatment_type = outcome_labels)) +  
   theme(text = element_text(size = 12)) + 
@@ -90,17 +99,17 @@ ggplot(pred_hce, aes(x = hce_cap, y = Estimate, color = study_pop, fill = study_
 ggsave(here::here('plots','predicted_costs_line_grid.png'),
        width = 12, height = 8)
 
-# TODO What is this actually predicting? Why isn't it one line?
-
 ggplot(pred_hce_all_models, aes(x = gdpcap, y = Estimate, color = study_pop, fill = study_pop)) +
   geom_line(lwd = 1) +
   geom_ribbon(aes(ymin = get(paste0('Q', 100*interval_probs[1])), ymax = get(paste0('Q', 100*interval_probs[2]))), alpha = 0.2, color = NA) +
   labs(
     x = "",
-    y = "Predicted cost ($XXXX)",
+    y = "Predicted cost ($2023)",
     fill = 'Age group',
     color = 'Age group'
-  ) + scale_x_log10() + ylim(c(0,NA)) +
+  ) + 
+  scale_x_log10() + 
+  scale_y_log10() + 
   theme_bw() + facet_wrap(treatment_type ~ model, scales = 'free', 
                           labeller = labeller(treatment_type = outcome_labels)) +  
   theme(text = element_text(size = 12)) + 
@@ -117,7 +126,7 @@ ggsave(here::here('plots','predicted_costs_line_grid_all_models.png'),
 #   labs(
 #     y = "Healthcare expenditure as a proportion of GDP per capita",
 #     x = "GDP per capita",
-#     fill = "Predicted\nhospitalisation\ncost (USD XXXX)"
+#     fill = "Predicted\nhospitalisation\ncost ($2023)"
 #   ) +
 #   geom_point(data = unique(use_hosp %>% select(gdpcap,hce_prop_gdp,study_pop) %>% drop_na()),
 #              aes(x = gdpcap, y = hce_prop_gdp), shape = 4, col = 'white') +

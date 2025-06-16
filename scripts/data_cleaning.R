@@ -19,11 +19,6 @@ costs_dt <- costs_dt[lcu_rates[study_year==main_year], on = c('iso3c'), lcu_rate
 costs_dt[iso3c == 'TWN' & study_year == 2010, lcu_rate_study_year := 31.5]
 costs_dt[iso3c == 'TWN' & study_year == 2010, lcu_rate_main_yr := 29.8]
 
-# ggplot(costs_dt) +
-#   geom_point(aes(x=lcu_rate, y=lcu_rate_22, col=iso3c, size=currency_year-1990), shape=4) +
-#   geom_line(aes(x=lcu_rate, y=lcu_rate), lty=2) +
-#   theme_bw() + scale_y_log10() + scale_x_log10()
-
 ## inflate to $ main year
 if(!exists('deflate_rates')){deflate_rates <- data.table(WDI(indicator='NY.GDP.DEFL.ZS', start=min(costs_dt$study_year), end=main_year))}
 deflate_rates[, currency_year := year][, study_year := year][, currency_iso3c := iso3c]
@@ -33,6 +28,10 @@ costs_dt <- costs_dt[deflate_rates, on = c('iso3c', 'study_year'), study_yr_defl
 costs_dt <- costs_dt[deflate_rates[year==main_year,], on = c('iso3c'), defl_rate_main_yr_i := i.NY.GDP.DEFL.ZS]
 costs_dt[, inflator_curr_to_stud_c := curr_yr_defl_rate_c/study_yr_defl_rate_c]
 costs_dt[, inflator_stud_to_main_i := defl_rate_main_yr_i/study_yr_defl_rate_i]
+
+usd_22 <- deflate_rates[year==2022 & iso3c=='USA',]$NY.GDP.DEFL.ZS
+usd_23 <- deflate_rates[year==2023 & iso3c=='USA',]$NY.GDP.DEFL.ZS
+inflate_USD_22_to_23 <- usd_23/usd_22
 
 if(sum(costs_dt[currency_iso3c != iso3c]$currency_iso3c != 'USA') > 0){
   print('Warning: some costs not in either local currency or USD')
@@ -52,9 +51,9 @@ costs_dt[, cost_main_yr_i := cost_stud_i*inflator_stud_to_main_i]
 costs_dt[, cost_usd_main_yr := cost_main_yr_i/lcu_rate_main_yr]
 
 ## adding GDP per capita
-if(!exists('gdp_data')){gdp_data <- WDI(indicator='NY.GDP.PCAP.KD', start=main_year, end=main_year)}
+if(!exists('gdp_data')){gdp_data <- WDI(indicator='NY.GDP.PCAP.CD', start=main_year, end=main_year)}
 costs_gdp <- data.table(merge(costs_dt, gdp_data, by = c('iso3c')))
-setnames(costs_gdp, 'NY.GDP.PCAP.KD', 'gdpcap')
+setnames(costs_gdp, 'NY.GDP.PCAP.CD', 'gdpcap')
 setnames(costs_gdp, 'country.x','country')
 costs_gdp <- costs_gdp[,c('th','country','iso3c','currency_iso3c','study_year','currency_year','study_pop','outcome','cost_usd_main_yr','gdpcap')]
 
@@ -73,6 +72,7 @@ ggplot(costs_gdp) +
 if(!exists('hce_data')){hce_data <- data.table(WDI(indicator='SH.XPD.CHEX.PC.CD', start=2022, end=2022))}
 costs_gdp <- costs_gdp[hce_data[iso3c %in% costs_gdp$iso3c,][,c('iso3c','SH.XPD.CHEX.PC.CD')], on = c('iso3c')]
 setnames(costs_gdp, 'SH.XPD.CHEX.PC.CD', 'hce_cap')
+costs_gdp[, hce_cap := inflate_USD_22_to_23*hce_cap]
 costs_gdp[, hce_prop_gdp := hce_cap/gdpcap]
 
 ggplot(costs_gdp) +
