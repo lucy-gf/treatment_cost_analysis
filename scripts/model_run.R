@@ -1,6 +1,8 @@
 
 #### RUNNING MODEL ####
 
+set.seed(70)
+
 interval_probs <- c((1 - interval_width)/2, 1 - (1 - interval_width)/2)
 
 cat('\nConf. interval width = ', 100*interval_width, '%\n', sep = '')
@@ -127,7 +129,9 @@ pred_hce_all_models_list <- map(
             re_formula = NA, probs = interval_probs) %>%
       as_tibble() %>%
       bind_cols(if(grepl('HCE', names(lms)[.x])){newdata_hce}else{newdata_gdp}) %>% 
-      mutate(model = names(lms)[.x])
+      mutate(model = names(lms)[.x]) %>% 
+      setnames('hce_cap', 'predictor', skip_absent = T) %>% 
+      setnames('gdpcap', 'predictor', skip_absent = T) 
   }
 )
 

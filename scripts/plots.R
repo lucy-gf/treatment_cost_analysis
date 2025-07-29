@@ -99,7 +99,7 @@ ggplot(pred_hce, aes(x = hce_cap, y = Estimate, color = study_pop, fill = study_
 ggsave(here::here('plots','predicted_costs_line_grid.png'),
        width = 12, height = 8)
 
-ggplot(pred_hce_all_models, aes(x = gdpcap, y = Estimate, color = study_pop, fill = study_pop)) +
+ggplot(pred_hce_all_models, aes(x = predictor, y = Estimate, color = study_pop, fill = study_pop)) +
   geom_line(lwd = 1) +
   geom_ribbon(aes(ymin = get(paste0('Q', 100*interval_probs[1])), ymax = get(paste0('Q', 100*interval_probs[2]))), alpha = 0.2, color = NA) +
   labs(
@@ -109,7 +109,7 @@ ggplot(pred_hce_all_models, aes(x = gdpcap, y = Estimate, color = study_pop, fil
     color = 'Age group'
   ) + 
   scale_x_log10() + 
-  scale_y_log10() + 
+  # scale_y_log10() + 
   theme_bw() + facet_wrap(treatment_type ~ model, scales = 'free', 
                           labeller = labeller(treatment_type = outcome_labels)) +  
   theme(text = element_text(size = 12)) + 
