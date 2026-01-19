@@ -10,7 +10,7 @@ Both using the `WDI` R package (World Development Indicators).
 
 ### Data in `/data/`
 
-- `FINAL Merged Flu Cost Data.csv` contains the umbrella review data used for model fitting
+- `FINAL_Merged_Flu_Cost_Data.xlsx` contains the umbrella review data used for model fitting
 
 ### Scripts in `/scripts/`
 
