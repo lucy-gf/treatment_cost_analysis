@@ -11,7 +11,7 @@ main_year <- 2023
 interval_width <- 0.95 # confidence interval width
 
 # loading data
-data <- data.table(read_xlsx(here::here('data','FINAL Merged Flu Cost Data.xlsx')))[!is.na(th),] # remove empty rows
+data <- data.table(read_xlsx(here::here('data','FINAL_Merged_Flu_Cost_Data.xlsx')))[!is.na(th),] # remove empty rows
 
 # cleaning data
 source(here::here('scripts','data_cleaning.R'))

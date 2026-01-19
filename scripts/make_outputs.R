@@ -75,8 +75,8 @@ format_number <- function(num){
 out_table_w <- out_table %>% 
   arrange(treatment_type, study_pop, hce_cap) %>% 
   select(iso3c, country, hce_cap, treatment_type, study_pop, Estimate, Est.Error, starts_with('Q')) %>% 
-  mutate(treatment_type = case_when(treatment_type == 'hosp' ~ 'Hospitalisation', T ~ 'Outpatient'),
-         study_pop = case_when(study_pop == 'adult' ~ 'Adults', study_pop == 'children' ~ 'Children', T ~ 'Elderly')) %>% 
+  mutate(treatment_type = case_when(treatment_type == 'hosp' ~ 'Inpatient', T ~ 'Outpatient'),
+         study_pop = case_when(study_pop == 'adult' ~ 'Adults', study_pop == 'children' ~ 'Children', T ~ 'Older people')) %>% 
   mutate(hce_cap = format_number(hce_cap),
          Estimate = format_number(Estimate),
          Est.Error = format_number(Est.Error),

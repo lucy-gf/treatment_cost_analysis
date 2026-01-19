@@ -6,8 +6,8 @@ effect_colors <- c('rand_eff' = '#f768a1', 'no_rand_eff' = '#41b6c4')
 effect_labels <- c('Random effects', 'No random effects')
 names(effect_labels) <- c('rand_eff','no_rand_eff')
 
-outcome_labels <- c('Hospitalisation','Outpatient')
+outcome_labels <- c('Inpatient','Outpatient')
 names(outcome_labels) <- c('hosp', 'outp')
 
-pop_labels <- c('Adults','Children','Elderly')
+pop_labels <- c('Adults','Children','Older people')
 names(pop_labels) <- c('adult','children','elderly')
