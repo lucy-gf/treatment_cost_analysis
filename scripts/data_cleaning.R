@@ -50,21 +50,17 @@ costs_dt[, cost_main_yr_i := cost_stud_i*inflator_stud_to_main_i]
 # CONVERT TO MAIN YEAR USD
 costs_dt[, cost_usd_main_yr := cost_main_yr_i/lcu_rate_main_yr]
 
-## adding GDP per capita
-if(!exists('gdp_data')){gdp_data <- WDI(indicator='NY.GDP.PCAP.CD', start=main_year, end=main_year)}
+## adding GDP per capita 
+# changing to PPP in international $ (NY.GDP.PCAP.PP.CD), as opposed to GDP US$ (NY.GDP.PCAP.CD)
+if(!exists('gdp_data')){gdp_data <- WDI(indicator='NY.GDP.PCAP.PP.CD', start=main_year, end=main_year)}
 costs_gdp <- data.table(merge(costs_dt, gdp_data, by = c('iso3c')))
-setnames(costs_gdp, 'NY.GDP.PCAP.CD', 'gdpcap')
+setnames(costs_gdp, 'NY.GDP.PCAP.PP.CD', 'gdpcap')
 setnames(costs_gdp, 'country.x','country')
 costs_gdp <- costs_gdp[,c('th','country','iso3c','currency_iso3c','study_year','currency_year','study_pop','outcome','cost_usd_main_yr','gdpcap')]
 
 ggplot(costs_gdp) +
   geom_point(aes(x=gdpcap, y=cost_usd_main_yr, col=iso3c)) +
   theme_bw() + scale_y_log10() + scale_x_log10() +
-  facet_grid(outcome ~ study_pop, scales = 'free_y')
-
-ggplot(costs_gdp) +
-  geom_point(aes(x=hce_prop_gdp, y=cost_usd_main_yr, col=iso3c)) +
-  theme_bw() + scale_y_log10() +
   facet_grid(outcome ~ study_pop, scales = 'free_y')
 
 # healthcare expenditure per capita as a proportion of GDP per capita 

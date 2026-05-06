@@ -118,14 +118,14 @@ newdata_gdp <- expand.grid(
   treatment_type = unique(costs_gdp$treatment_type)
 )
 
-pred_hce <- predict(pref_model, newdata = newdata_hce, re_formula = NA, probs = interval_probs) %>%
+pred_hce <- fitted(pref_model, newdata = newdata_hce, re_formula = NA, probs = interval_probs) %>%
   as_tibble() %>%
   bind_cols(newdata_hce)
 
 pred_hce_all_models_list <- map(
   .x = 1:length(lms),
   .f = ~{
-    predict(lms[[.x]], newdata = if(grepl('HCE', names(lms)[.x])){newdata_hce}else{newdata_gdp}, 
+    fitted(lms[[.x]], newdata = if(grepl('HCE', names(lms)[.x])){newdata_hce}else{newdata_gdp}, 
             re_formula = NA, probs = interval_probs) %>%
       as_tibble() %>%
       bind_cols(if(grepl('HCE', names(lms)[.x])){newdata_hce}else{newdata_gdp}) %>% 

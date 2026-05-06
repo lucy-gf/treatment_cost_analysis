@@ -38,16 +38,70 @@ data_wdi_no_iso <- data_wdi_long %>% filter(iso3c %notin% costs_gdp$iso3c)
 
 ## predict model
 
-out_table_incl_iso <- predict(pref_model, newdata = data_wdi_incl_iso, probs = interval_probs) %>%
+out_table_incl_iso <- fitted(pref_model, newdata = data_wdi_incl_iso, probs = interval_probs) %>%
   as_tibble() %>%
   bind_cols(data_wdi_incl_iso) 
 
-out_table_no_iso <- predict(pref_model, newdata = data_wdi_no_iso, re_formula = NA, probs = interval_probs) %>%
+out_table_no_iso <- fitted(pref_model, newdata = data_wdi_no_iso, re_formula = NA, probs = interval_probs) %>%
   as_tibble() %>%
   bind_cols(data_wdi_no_iso)
 
 out_table <- rbind(out_table_incl_iso,
                    out_table_no_iso)
+
+pred_obs_plot <- pred_obs %>% filter(effects == 'rand_eff') %>% 
+  select(!treatment_type) %>% rename(treatment_type = outcome)
+
+un_pred_obs_plot <- unique(pred_obs_plot %>% select(country, study_pop, treatment_type)) %>% 
+  mutate(in_upop = T)
+
+out_table_plot <- rbind(out_table_incl_iso %>% mutate(with_iso = 'rand_eff'),
+                        out_table_no_iso %>% mutate(with_iso = 'no_rand_eff')) %>% 
+  left_join(un_pred_obs_plot, by = c('country', 'study_pop', 'treatment_type')) %>% 
+  mutate(in_upop = case_when(is.na(in_upop) ~ F, T ~ T)) %>% 
+  rbind(fitted(pref_model, newdata = data_wdi_incl_iso %>% filter(iso3c=='USA'), 
+               re_formula = NA, probs = interval_probs) %>%
+          as_tibble() %>%
+          bind_cols( data_wdi_incl_iso %>% filter(iso3c=='USA')) %>% 
+          mutate(with_iso = 'no_rand_eff', in_upop = F))
+
+effect_colors_2 <- effect_colors
+names(effect_colors_2) <- c(T, F)
+
+ggplot() +
+  geom_line(data = out_table_plot %>% filter(with_iso == 'no_rand_eff'), 
+            aes(x = hce_cap, y = Estimate, col = with_iso, group = with_iso), 
+            lty = 2, lwd = 0.8) +
+  geom_ribbon(data = out_table_plot %>% filter(with_iso == 'no_rand_eff'),
+              aes(x = hce_cap, fill = with_iso,
+                  ymin = get(paste0('Q', 100*interval_probs[1])), 
+                  ymax = get(paste0('Q', 100*interval_probs[2]))),
+              alpha = 0.3) + 
+  geom_point(data = out_table_plot %>% filter(in_upop),
+             aes(x = hce_cap, y = Estimate, col = with_iso), 
+             shape = 1, size = 3) +
+  geom_errorbar(data = out_table_plot %>% filter(in_upop),
+                aes(x = hce_cap, col = with_iso,
+                    ymin = get(paste0('Q', 100*interval_probs[1])), 
+                    ymax = get(paste0('Q', 100*interval_probs[2]))),
+                lwd = 0.8) + 
+  geom_point(data = pred_obs_plot,
+             aes(x = hce_cap, y = cost_usd_main_yr), 
+             shape = 4, size = 3) +
+  labs(x = "Healthcare expenditure per capita ($2023)", 
+       y = "Treatment cost ($2023)", 
+       col = '', fill = '') +
+  # scale_color_gradientn(colors = colorscale, values = scales::rescale(breaks)) +
+  scale_x_log10(breaks = c(30,100,300,1000,3000,10000,30000), limits = c(min(out_table_plot$hce_cap),30000)) +
+  scale_y_log10() +
+  scale_colour_manual(values = effect_colors, labels = effect_labels, aesthetics = c("colour", "fill")) +
+  theme_bw() + theme(text = element_text(size = 12)) + 
+  facet_grid(treatment_type ~ study_pop, scales = 'free', 
+             labeller = labeller(treatment_type = outcome_labels,
+                                 study_pop = pop_labels))
+
+ggsave(here::here('plots','observed_vs_predicted.png'),
+       width = 14, height = 8)
 
 format_number <- function(num){
   
@@ -94,9 +148,33 @@ colnames(out_table_w) <- c('ISO Code','Country','Healthcare expenditure per capi
 write_csv(out_table_w, 
           here::here('output','outcome_table.csv'))
 
+who_regions <- read_xlsx(here::here('data','who_regions.xlsx'))
+colnames(who_regions) <- c('ISO Code','name','na','na','who_region','na')
 
+out_table %>% 
+  left_join(who_regions %>% 
+              select(iso3c, who_region) %>% 
+              filter(iso3c %in% unique(out_table_w$`ISO Code`)), 
+            by = 'iso3c') %>% 
+  mutate(who_region = case_when(iso3c == 'LIE' ~ 'European Region',
+                                iso3c == 'PSE' ~ 'Eastern Mediterranean Region',
+                                T ~ who_region)) %>% 
+  ggplot() + 
+  geom_violin(aes(x = who_region, y = Estimate,
+                  col = study_pop, fill = study_pop),
+              alpha = 0.3) +
+  geom_point(aes(x = who_region, group = study_pop, y = Estimate, col = study_pop),
+             position = position_dodge(width = 0.9), alpha = 0.8) +
+  scale_color_manual(values = age_colors, labels = pop_labels) +
+  scale_fill_manual(values = age_colors, labels = pop_labels) +
+  facet_grid(treatment_type ~ ., scales = 'free',
+             labeller = labeller(treatment_type = outcome_labels)) + 
+  labs(col = 'Age group', fill = 'Age group', x = '', y = 'Predicted cost ($2023)') +
+  theme_bw() + theme(text = element_text(size = 14)) +
+  scale_y_log10()
 
-
+ggsave(here::here('plots','cost_by_region.png'),
+       width = 20, height = 10)
 
 
 
