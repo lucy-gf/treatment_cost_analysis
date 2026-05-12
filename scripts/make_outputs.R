@@ -151,7 +151,7 @@ write_csv(out_table_w,
 who_regions <- read_xlsx(here::here('data','who_regions.xlsx'))
 colnames(who_regions) <- c('ISO Code','name','na','na','who_region','na')
 
-out_table %>% 
+hosp_p <- out_table %>% 
   left_join(who_regions %>% 
               select(iso3c, who_region) %>% 
               filter(iso3c %in% unique(out_table_w$`ISO Code`)), 
@@ -159,6 +159,7 @@ out_table %>%
   mutate(who_region = case_when(iso3c == 'LIE' ~ 'European Region',
                                 iso3c == 'PSE' ~ 'Eastern Mediterranean Region',
                                 T ~ who_region)) %>% 
+  filter(treatment_type == 'hosp') %>% 
   ggplot() + 
   geom_violin(aes(x = who_region, y = Estimate,
                   col = study_pop, fill = study_pop),
@@ -167,14 +168,71 @@ out_table %>%
              position = position_dodge(width = 0.9), alpha = 0.8) +
   scale_color_manual(values = age_colors, labels = pop_labels) +
   scale_fill_manual(values = age_colors, labels = pop_labels) +
-  facet_grid(treatment_type ~ ., scales = 'free',
-             labeller = labeller(treatment_type = outcome_labels)) + 
-  labs(col = 'Age group', fill = 'Age group', x = '', y = 'Predicted cost ($2023)') +
+  labs(col = 'Age group', fill = 'Age group', x = '', y = 'Predicted cost ($2023)',
+       title = 'Inpatient') +
+  theme_bw() + 
+  theme(text = element_text(size = 14),
+        axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) +
+  scale_y_log10(); hosp_p
+
+outp_p <- out_table %>% 
+  left_join(who_regions %>% 
+              select(iso3c, who_region) %>% 
+              filter(iso3c %in% unique(out_table_w$`ISO Code`)), 
+            by = 'iso3c') %>% 
+  mutate(who_region = case_when(iso3c == 'LIE' ~ 'European Region',
+                                iso3c == 'PSE' ~ 'Eastern Mediterranean Region',
+                                T ~ who_region)) %>%
+  filter(treatment_type == 'outp') %>% 
+  ggplot() + 
+  geom_violin(aes(x = who_region, y = Estimate,
+                  col = study_pop, fill = study_pop),
+              alpha = 0.3) +
+  geom_point(aes(x = who_region, group = study_pop, y = Estimate, col = study_pop),
+             position = position_dodge(width = 0.9), alpha = 0.8) +
+  scale_color_manual(values = age_colors, labels = pop_labels) +
+  scale_fill_manual(values = age_colors, labels = pop_labels) +
+  labs(col = 'Age group', fill = 'Age group', x = '', y = 'Predicted cost ($2023)',
+       title = 'Outpatient') +
   theme_bw() + theme(text = element_text(size = 14)) +
-  scale_y_log10()
+  scale_y_log10(); outp_p
+
+hosp_p + outp_p + plot_layout(nrow = 2, guides = 'collect',
+                              axis_title="collect")
 
 ggsave(here::here('plots','cost_by_region.png'),
        width = 20, height = 10)
+
+
+whoreg <- out_table %>% 
+  left_join(who_regions %>% 
+              select(iso3c, who_region) %>% 
+              filter(iso3c %in% unique(out_table_w$`ISO Code`)), 
+            by = 'iso3c') %>% 
+  mutate(who_region = case_when(iso3c == 'LIE' ~ 'European Region',
+                                iso3c == 'PSE' ~ 'Eastern Mediterranean Region',
+                                T ~ who_region)) %>% 
+  group_by(treatment_type, study_pop, who_region) %>% 
+  summarise(range = paste0('$', round(min(Estimate)), ' - $', round(max(Estimate))))
+
+print(whoreg %>% filter(study_pop == 'elderly',
+                        who_region %like% 'Afr|Amer') %>% 
+        pivot_wider(names_from = who_region, values_from = range))
+
+
+# ggplot(pred_obs_plot, aes(x = hce_cap, y = cost_usd_main_yr, col = study_pop)) +
+#   geom_point(size = 2, alpha = 0.6) +
+#   geom_smooth(method = "lm") +
+#   labs(x = "Healthcare expenditure per capita ($2023)", 
+#        y = "Treatment cost ($2023)") +
+#   scale_x_log10(breaks = c(30,100,300,1000,3000,10000,30000),
+#                 limits = c(min(out_table_plot$hce_cap),30000)) +
+#   scale_y_log10() +
+#   facet_grid(treatment_type ~ ., scales = 'free') + 
+#   theme_bw() + theme(text = element_text(size = 12)) 
+
 
 
 
